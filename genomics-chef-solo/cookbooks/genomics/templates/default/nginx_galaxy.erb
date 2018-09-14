@@ -1,0 +1,109 @@
+upstream <%=@upstream_name%> {
+    server localhost:<%=node['genomics']['galaxy']['port']%> fail_timeout=120s;
+}
+
+upstream <%=@upstream_name_reports%> {
+    server localhost:<%=node['genomics']['galaxy']['reports']['port']%> fail_timeout=120s;
+}
+
+server {
+    listen 80;
+    server_name .<%= node['system']['domain_name'] %>;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    root /usr/share/nginx/www;
+    index index.html index.htm;
+
+    # Make site accessible from http://*.<%= node['system']['domain_name'] %>/
+    server_name .<%= node['system']['domain_name'] %>;
+    listen 443;
+
+<% if File.directory?(@ssl_path) %>
+    ssl on;
+    ssl_certificate <%= @ssl_path %>/fullchain.pem;
+    ssl_certificate_key <%= @ssl_path %>/privkey.pem;
+
+    # restrict the ciphersuite and protocols, and prefer the server cipher
+    # ordering
+    ssl_ciphers "AES128+EECDH:AES128+EDH";
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_prefer_server_ciphers on;
+<% end %>
+
+    client_max_body_size 10G;
+
+    uwsgi_read_timeout 180;
+
+    location / {
+        uwsgi_pass 127.0.0.1:<%=node['genomics']['galaxy']['port']%>;
+        uwsgi_param UWSGI_SCHEME $scheme;
+        include uwsgi_params;
+    }
+
+    location /reports {
+        proxy_pass http://<%=@upstream_name_reports%>;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 120s;
+        auth_basic "Restricted";
+        auth_basic_user_file /etc/nginx/galaxy-reports.htpasswd;
+    }
+
+    location ^/display_application/[a-zA-Z0-9]+/igv.* {
+        proxy_pass http://<%=@upstream_name%>;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header REMOTE_USER igv_display@globusgenomics.org;
+        proxy_read_timeout 120s;
+    }
+
+    location /_x_accel_redirect/ {
+        internal;
+        alias /;
+    }
+
+    location /static {
+        alias /opt/galaxy/static;
+    }
+
+    location /static/style {
+        alias /opt/galaxy/static/june_2007_style/blue;
+    }
+
+    location /static/scripts {
+        alias /opt/galaxy/static/scripts/packed;
+    }
+
+    location /favicon.ico {
+        alias /opt/galaxy/static/favicon.ico;
+    }
+
+    location /robots.txt {
+        alias /opt/galaxy/static/robots.txt;
+    }
+
+    location /munin {
+        alias /var/cache/munin/www;
+    }
+
+    location /monitor {
+        root /opt;
+        index index.php;
+        auth_basic "Restricted";
+        auth_basic_user_file .htpasswd;
+#        try_files $uri =404;
+    }
+
+    location ~ \.php$ {
+        root /opt;
+        auth_basic "Restricted";
+        auth_basic_user_file .htpasswd;
+#        try_files $uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+        include fastcgi_params;
+    }
+}

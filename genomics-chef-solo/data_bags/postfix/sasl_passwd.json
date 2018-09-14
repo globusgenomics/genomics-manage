@@ -1,0 +1,15 @@
+{
+  "id": "sasl_passwd",
+  "smtp_sasl_user_name": {
+    "encrypted_data": "QGllz8iq0SaAn+lFQm23ZIAMcLAyM5akVpeAac5bH40=\n",
+    "iv": "XlDoCvHH3tZ69Kd5AK8nIg==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  },
+  "smtp_sasl_passwd": {
+    "encrypted_data": "PUHSakUpmV2q55RSgwo886BqR/kQuD0w60RJQyAQVgpXiM9+ZSXQ/wFaxDMf\nBE6x\n",
+    "iv": "ZMUQ7GbwYAZzxdXXwDNGlQ==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "galaxy_reports_user",
+  "username": {
+    "encrypted_data": "KO9060aam4Wra6D/mnLdqQnhjrtznsg3IYozqAVpiaw=\n",
+    "iv": "10QGKW1ymO7sorrxzcipQg==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  },
+  "passwd": {
+    "encrypted_data": "C7M8qOCIAu+Yr1YuwCplbnhz3NR3S6Yv/6gwpm1eZVM=\n",
+    "iv": "gqshOzU+BHrPEXahTV4ybw==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  }
+}

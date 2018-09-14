@@ -1,0 +1,10 @@
+genomics-chef-solo/cache/*
+genomics-chef-solo/chef_guid
+genomics-chef-solo/nodes/*
+genomics-chef-solo/local-mode-cache/*
+genomics-chef-solo/nodes/*
+cache/*
+chef_guid
+nodes/*
+local-mode-cache/*
+nodes/*
