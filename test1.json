@@ -1,4 +1,0 @@
-{
- "genomics_manage_dir": "/root/genomics-manage",
- "run_list": [ "recipe[genomics::set_system]", "recipe[globus]", "recipe[genomics::default]" ]
-}

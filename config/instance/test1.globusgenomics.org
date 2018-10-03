@@ -1,0 +1,17 @@
+{
+    "name": "test1.globusgenomics.org",
+    "worker_type": "role[r3_8xlarge_workers]",
+    "volumes": {
+        "scratch_volume": {
+            "size": 100,
+            "encrypted": True,
+            "volume_type": "gp2",
+            "mount_point": "/scratch",
+            "mount_device": "/dev/sdf",
+            "file_system": "ext4"
+        }
+    },
+    "aws": {
+        "kms_key_id": "6272cd5d-362f-4b8d-8593-7f165d239c49"
+    }
+}

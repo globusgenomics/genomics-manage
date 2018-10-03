@@ -1,0 +1,162 @@
+#cloud-config
+
+apt_update: true
+packages:
+#Condor
+ - libssl0.9.8
+ - libvirt0
+ - libdate-manip-perl
+<% if node['genomics']['provisioner']['merged_ephemerals'] %>
+# LVM
+ - lvm2
+<% end %>
+#NFS
+ - nfs-common
+#Galaxy
+ - gnuplot
+ - liblist-moreutils-perl
+ - libemail-valid-perl
+ - libwww-mechanize-perl
+ - libtie-ixhash-perl
+ - libdbi-perl
+ - libdbd-sqlite3-perl
+ - openjdk-6-jre
+ - python-markupsafe
+ - python-numpy
+ - python-psycopg2
+ - r-base
+ - ruby1.9.1
+ - samtools
+ - unzip
+ - zip
+ - python-dateutil
+ - python-magic
+ - libqt4-core
+ - libqt4-gui
+ - python-tk
+ - python-lxml
+ - libxslt1.1
+ - tcsh
+ - tk
+#Useful tools
+ - mc
+
+runcmd:
+
+# add SSH key for galaxy user as the first step, in order to faciliate
+# debugging
+ - echo '<%= File.read(File.join(node['galaxy']['homedir'], ".ssh/id_rsa.pub")).strip %>' >> /home/ubuntu/.ssh/authorized_keys
+
+# setup hostname info
+ - echo '<%=node[:ipaddress]%> <%=node[:fqdn]%> headnode' >> /etc/hosts
+ - echo "$(ec2metadata --local-ip) $(ec2metadata --local-hostname)" >> /etc/hosts
+ - echo "$(ec2metadata --local-hostname)" > /etc/hostname
+ - [ hostname, -F, /etc/hostname ]
+
+# setup ephemeral filesystem...
+ - [ sed, -i.bak, '/xvdb/d', /etc/fstab ]
+ - [ mkdir, -p, /ephemeral/0 ]
+ - [ umount, /mnt ]
+<% if node['genomics']['provisioner']['merged_ephemerals'] %>
+# ...using merged ephemeral volumes
+ - [ pvcreate, /dev/xvdb ]
+ - [ pvcreate, /dev/xvdc ]
+ - [ pvcreate, /dev/xvdd ]
+ - [ pvcreate, /dev/xvde ]
+ - [ vgcreate, ephemeral, /dev/xvdb ]
+ - [ vgextend, ephemeral, /dev/xvdc ]
+ - [ vgextend, ephemeral, /dev/xvdd ]
+ - [ vgextend, ephemeral, /dev/xvde ]
+ - [ lvcreate, -l, 100%VG, -i, 2, -I, 64, ephemeral, -n, ephemeral ]
+ - [ mkfs.ext4, /dev/ephemeral/ephemeral ]
+ - [ mount, /dev/ephemeral/ephemeral, /ephemeral/0 ]
+<% else %>
+# ...using single ephemeral volume
+# - [ mkdir, -p, /ephemeral ]
+# - [ ln, -s, /mnt, /ephemeral/0 ]
+ - [ mkfs.ext4, /dev/xvdb ]
+ - [ mount, /dev/xvdb, /ephemeral/0 ]
+<% end %>
+
+# move /tmp to ephemeral FS
+ - [ cp, -pr, /tmp, /ephemeral/0 ]
+ - [ rm, -rf, /tmp ]
+ - [ ln, -s, /ephemeral/0/tmp, /tmp ]
+
+# Configure NFS and mount remote filesystems
+ - echo 'NEED_STATD=no' > /etc/default/nfs-common
+ - echo 'NEED_IDMAPD=yes' >> /etc/default/nfs-common
+ - echo '/- /etc/auto.nfs' >> /etc/auto.master
+# for each nfs-exported directory, make that directory and add it to fstab
+<% node['nfs_export'].each do |dirname| %>
+ - [ mkdir, -p, <%= dirname %> ]
+ - echo '<%=node[:ipaddress]%>:<%= dirname %> <%= dirname %> nfs4 auto 0 0' >> /etc/fstab
+<% end %>
+# create the idmap
+ - echo '[General]' > /etc/idmapd.conf
+ - echo 'Verbosity = 0' >> /etc/idmapd.conf
+ - echo 'Pipefs-Directory = /run/rpc_pipefs' >> /etc/idmapd.conf
+ - echo 'Domain = <%= node['system']['domain_name'] %>' >> /etc/idmapd.conf
+ - echo '[Mapping]' >> /etc/idmapd.conf
+ - echo 'Nobody-User = nobody' >> /etc/idmapd.conf
+ - echo 'Nobody-Group = nogroup' >> /etc/idmapd.conf
+ - [ service, idmapd, restart ]
+ - [ mount, -a ]
+
+# Increase both hard and soft on open files
+ - echo '* - nofile 65000' >> /etc/security/limits.conf
+
+# Add the galaxy user used to run all jobs
+ - [ addgroup, --gid, 4000, galaxy ]
+ - [ adduser, --uid, 4000, --ingroup, galaxy, --disabled-password, --gecos, '', galaxy ]
+
+# Install Docker
+ - wget -qO- https://get.docker.com/ | sh
+ - usermod -aG docker galaxy
+ - service docker restart
+
+# Install Condor
+ - [ wget, 'http://repo.globusgenomics.org/packages/condor_8.2.6-288241_amd64.deb' ]
+ - [ dpkg, -i, 'condor_8.2.6-288241_amd64.deb' ]
+# Configure Condor
+ - [ mkdir, -p, /ephemeral/0/condor ]
+ - [ chown, 'condor:condor', /ephemeral/0/condor ]
+ - echo 'CONDOR_HOST = <%=node[:ipaddress]%>' > /etc/condor/condor_config.local
+ - echo 'COLLECTOR_NAME = Globus Genomics Condor Pool' >> /etc/condor/condor_config.local
+ - echo 'START = GlobusOnline =?= UNDEFINED' >> /etc/condor/condor_config.local
+ - echo 'SUSPEND = FALSE' >> /etc/condor/condor_config.local
+ - echo 'PREEMPT = FALSE' >> /etc/condor/condor_config.local
+ - echo 'KILL = FALSE' >> /etc/condor/condor_config.local
+ - echo 'DAEMON_LIST = MASTER, STARTD' >> /etc/condor/condor_config.local
+ - echo 'ALLOW_READ = *' >> /etc/condor/condor_config.local
+ - echo 'ALLOW_WRITE = *' >> /etc/condor/condor_config.local
+ - echo 'EXECUTE = /ephemeral/0/condor' >> /etc/condor/condor_config.local
+ - echo 'SLOT_TYPE_1 = cpus=<%=node['genomics']['provisioner']['worker_num_cpus']%>' >> /etc/condor/condor_config.local
+ - echo 'NUM_SLOTS_TYPE_1 = 1' >> /etc/condor/condor_config.local
+ - echo 'SLOT_TYPE_1_PARTITIONABLE = true' >> /etc/condor/condor_config.local
+ - echo 'FILESYSTEM_DOMAIN = <%= node['system']['domain_name'] %>' >> /etc/condor/condor_config.local
+ - echo 'UID_DOMAIN = <%= node['system']['domain_name'] %>' >> /etc/condor/condor_config.local
+ - echo 'TRUST_UID_DOMAIN = True' >> /etc/condor/condor_config.local
+ - echo "NETWORK_INTERFACE = $(ec2metadata --local-ip)" >> /etc/condor/condor_config.local
+ - echo 'ulimit -n 65000' > /tmp/restart_condor.sh
+ - echo 'service condor restart' >> /tmp/restart_condor.sh
+ - [ bash, /tmp/restart_condor.sh ]
+
+# Configure self-termination
+ - echo '#!/bin/bash' > /usr/local/bin/monitor_instance.sh
+ - echo 'running_secs="$(cat /proc/uptime | cut -d'.' -f1)"' >> /usr/local/bin/monitor_instance.sh
+ - echo 'let minutes_left=60-running_secs/60' >> /usr/local/bin/monitor_instance.sh
+ - echo 'if [[ $minutes_left -gt 2 ]]; then' >> /usr/local/bin/monitor_instance.sh
+ - echo '    exit 0' >> /usr/local/bin/monitor_instance.sh
+ - echo 'fi' >> /usr/local/bin/monitor_instance.sh
+ - echo 'daemonname="$(ec2metadata --local-hostname)"' >> /usr/local/bin/monitor_instance.sh
+ - echo 'claimed=`condor_status -claimed -direct $daemonname`' >> /usr/local/bin/monitor_instance.sh
+ - echo 'if [[ -z $claimed ]]; then' >> /usr/local/bin/monitor_instance.sh
+ - echo '    rsync -a --delete /var/log <%=node['monitoring']['monitor_compute_node']['log_dir']%>/$(ec2metadata --instance-id)' >> /usr/local/bin/monitor_instance.sh
+ - echo '    echo "+++++[$(date)]/sbin/shutdown -h now+++++" >> <%=node['monitoring']['monitor_compute_node']['log_dir']%>/$(ec2metadata --instance-id)/main.log' >> /usr/local/bin/monitor_instance.sh
+ - echo '    /sbin/shutdown -h now' >> /usr/local/bin/monitor_instance.sh
+ - echo 'fi' >> /usr/local/bin/monitor_instance.sh
+ - [ chmod, 755, /usr/local/bin/monitor_instance.sh ]
+ - echo '* * * * * root /usr/local/bin/monitor_instance.sh' > /etc/cron.d/monitor_instance
+# Configure system log and usage backup
+ - echo '*/3 * * * * root <%=node['monitoring']['monitor_compute_node']['log_dir']%>/compute_node_monitor.sh' > /etc/cron.d/monitor_compute_node

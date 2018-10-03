@@ -39,7 +39,7 @@ end
 
 # decrypt encrypted data bag
 
-secret = Chef::EncryptedDataBagItem.load_secret(::File.join(node["genomics_manage_dir"], 'encrypted_data_bag_secret'))
+secret = Chef::EncryptedDataBagItem.load_secret(::File.join(node["genomics_sec_dir"], 'encrypted_data_bag_secret'))
 globus_cred = Chef::EncryptedDataBagItem.load("globus", "globus_cred", secret)
 
 
@@ -68,6 +68,8 @@ bash 'add Globus endpoint' do
   user 'root'
   code <<-EOH
   globus-connect-server-setup
+  echo "!!!Please update the endpoint through Globus CLI"
+  sleep 1m
   EOH
   subscribes :run, "template[#{node['globus']['config_file']}]", :immediately
 end
@@ -76,6 +78,3 @@ end
 service 'apache2' do
   action :stop
 end
-
-require "highline/import"
-ask "Please update the endpoint through Globus CLI, then press Enter to proceed. "

@@ -1,0 +1,19 @@
+CONDOR_HOST = <%= node[:fqdn] %>
+COLLECTOR_NAME = Globus Genomics Condor Pool
+START = GlobusOnline
+
+SUSPEND = FALSE
+PREEMPT = FALSE
+KILL = FALSE
+DAEMON_LIST = <%= @daemons %>
+EXECUTE = /ephemeral/0/condor
+NUM_CPUS=50
+SLOT_TYPE_1 = cpus=50
+NUM_SLOTS_TYPE_1 = 1
+SLOT_TYPE_1_PARTITIONABLE = True
+
+ALLOW_READ = *
+ALLOW_WRITE = *
+
+UID_DOMAIN = <%= node['system']['domain_name'] %>
+FILESYSTEM_DOMAIN = <%= node['system']['domain_name'] %>

@@ -8,3 +8,7 @@ default['genomics']['galaxy']['port'] = 8080
 default['genomics']['galaxy']['reports']['port'] = 8081
 
 default['genomics']['maintainer']['email'] = 'xiao2@uchicago.edu'
+
+default['genomics']['condor']['execute_dir'] = '/ephemeral/0/condor'
+
+default['genomics']['filesystem']['scratch']['mount_point'] = '/scratch'

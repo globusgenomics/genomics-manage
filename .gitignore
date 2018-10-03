@@ -8,3 +8,4 @@ chef_guid
 nodes/*
 local-mode-cache/*
 nodes/*
+*.pyc

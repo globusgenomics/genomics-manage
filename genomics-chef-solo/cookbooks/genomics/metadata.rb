@@ -9,3 +9,4 @@ version '0.1.0'
 depends          "system"
 depends          "postfix"
 depends          "nginx"
+depends          "nfs"

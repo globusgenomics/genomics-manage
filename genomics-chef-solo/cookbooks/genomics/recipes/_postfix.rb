@@ -38,7 +38,7 @@ include_recipe "postfix"
 # plop the key/secret into /etc/postfix/sasl/passwd
 # doing this after the sasl_auth recipe runs ensures that the encrypted databag
 # data gets there
-secret = Chef::EncryptedDataBagItem.load_secret(::File.join(node["genomics_manage_dir"], 'encrypted_data_bag_secret'))
+secret = Chef::EncryptedDataBagItem.load_secret(::File.join(node["genomics_sec_dir"], 'encrypted_data_bag_secret'))
 ses_creds = Chef::EncryptedDataBagItem.load("postfix", "sasl_passwd", secret)
 password_file = node['postfix']['sasl_password_file']
 

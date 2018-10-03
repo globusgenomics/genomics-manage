@@ -27,7 +27,7 @@ node.set['nginx']['gzip_http_version'] = "1.1"
 include_recipe "nginx"
 
 # set username/passwd for galaxy reports
-secret = Chef::EncryptedDataBagItem.load_secret(::File.join(node["genomics_manage_dir"], 'encrypted_data_bag_secret'))
+secret = Chef::EncryptedDataBagItem.load_secret(::File.join(node["genomics_sec_dir"], 'encrypted_data_bag_secret'))
 galaxy_reports_user = Chef::EncryptedDataBagItem.load("nginx", "galaxy_reports_user", secret)
 package "apache2-utils" do
 end
