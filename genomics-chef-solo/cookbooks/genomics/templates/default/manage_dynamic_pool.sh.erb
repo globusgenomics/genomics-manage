@@ -1,0 +1,161 @@
+#!/bin/bash
+
+tag="$1"
+worker_name="worker@${tag}"
+
+declare -A az_to_subnet
+<% node['aws']['worker_subnets'].each_pair do |zone,subnet| %>
+<% if subnet %>
+az_to_subnet["<%= zone %>"]="<%=subnet%>"
+<% end %>
+<% end %>
+
+
+ec2_type='<%=node['genomics']['provisioner']['worker_type']%>'
+worker_cpus=<%=node['genomics']['provisioner']['worker_num_cpus']%>
+price='<%=node['genomics']['provisioner']['worker_bid_price']%>'
+
+<% if node['genomics']['provisioner']['worker_is_hvm'] %>
+ami='<%=node['genomics']['provisioner']['worker_hvm_ami']%>'
+<% else %>
+ami='<%=node['genomics']['provisioner']['worker_pv_ami']%>'
+<% end %>
+
+cd /opt/scripts
+
+# Get number of cpus and nodes requested by jobs being in the idle state longer than 2 minutes (120 secs)
+requested_cpus="$(condor_q -format "%s\n" RequestCpus -constraint "JobStatus == 1 && QDate < $(date +%s) - 120" | paste -sd+ | bc)"
+if [[ -z $requested_cpus ]]; then
+    exit 0
+fi
+
+
+echo "[$(date)] ---Provisioner Start---"
+
+
+echo "[$(date)] Requested CPUs: $requested_cpus"
+let nodes=requested_cpus/worker_cpus
+if [[ requested_cpus%worker_cpus -gt 0 ]]; then
+    let ++nodes
+fi
+echo "[$(date)] Requested nodes: $nodes"
+
+# Unclaimed nodes are a sum of three types of requests:
+# 1) open spot requests,
+# 2) active spot requests that correspond to pending instances,
+# 3) active spot requests that correspond to running instances not claimed yet as condor nodes.
+
+<% if node['provisioner']['use_on_demand_instance'] %>
+let unclaimed_nodes=`ec2din -F instance-state-name=pending -F "tag:Name=$worker_name" | grep ^INSTANCE | wc -l`
+echo "[$(date)] Pending on-demand requests: $unclaimed_nodes"
+<% else %>
+let unclaimed_nodes=`ec2dsir -F state=open -F "tag:Name=$worker_name" | grep ^SPOTINSTANCEREQUEST | wc -l`
+echo "[$(date)] Open spot requests: $unclaimed_nodes"
+<% end %>
+
+
+if [[ $nodes -le $unclaimed_nodes ]]; then
+    exit 0
+fi
+
+<% if node['provisioner']['use_on_demand_instance'] %>
+active_spot_requests=`ec2din -F instance-state-name=running -F "tag:Name=$worker_name" | grep ^INSTANCE | cut -f 2`
+<% else %>
+active_spot_requests=`ec2dsir -F state=active -F "tag:Name=$worker_name" | grep ^SPOTINSTANCEREQUEST | cut -f 12`
+<% end %>
+
+if [[ -n "$active_spot_requests" ]]; then
+<% if not node['provisioner']['use_on_demand_instance'] %>
+    # tag all active instances with names and headnodes
+    # note that repeatedly tagging an instance is a no-op, not harmful
+    for id in $active_spot_requests;
+    do
+        ec2addtag "$id" --tag "Name=$worker_name" --tag "headnode=<%=node[:fqdn]%>" --tag "owner=globus"
+    done
+<% end %>
+
+    let pending_instances=`ec2din -F instance-state-name=pending $active_spot_requests | grep ^INSTANCE | wc -l`
+    echo "[$(date)] Pending instances: $pending_instances"
+    let unclaimed_nodes+=pending_instances
+    if [[ $nodes -le $unclaimed_nodes ]]; then
+        exit 0
+    fi
+    running_instance_ip=`ec2din -F instance-state-name=running $active_spot_requests | grep ^INSTANCE | cut -f 5`
+    for ip in $running_instance_ip; do
+        claimed=`condor_status -claimed -direct $ip 2>/dev/null`
+        if [[ -z "$claimed" ]]; then
+            id=`ec2din | grep INSTANCE.*$ip | cut -f 2 2>/dev/null`
+            date=`ec2din $id | grep ^INSTANCE | cut -f 11 2>/dev/null`
+            echo "[$(date)] Unclaimed running instance: $id, $ip, launched $date"
+            if [[ $((`date +%s` - `date --date="$date" +%s`)) -lt 3600 ]]; then
+                let ++unclaimed_nodes
+            else
+                echo "[$(date)] Terminating the unclaimed running instance: $id, $ip, launched $date"
+                ec2kill $id 2>/dev/null
+            fi
+        fi
+    done
+fi
+let nodes=nodes-unclaimed_nodes
+
+# Find the cheapest availability zone among those we have mapped to subnets
+current_time=`date -u +%Y-%m-%dT%T`
+min_price=1000.0
+zone='fake'
+for z in "${!az_to_subnet[@]}"; do
+    new_price=`ec2dsph -F 'product-description=<%=@product_system_description%>' -t ${ec2_type} -a $z -s ${current_time} | head -n 1 | cut -f 2`
+    echo "[$(date)] Availability zone: $z, price: $new_price"
+    if [[ -n ${new_price} && `echo ${new_price}'<'${min_price} | bc -l` -eq 1 ]]; then
+        min_price=${new_price}
+        zone=$z
+    fi
+done
+
+if [[ $nodes -gt 5 ]]; then
+    let nodes=5
+fi
+
+# Request spot instances in the cheapest availability zone
+if [[ $nodes -gt 0 ]]; then
+    echo "[$(date)] Spot instances being requested: $nodes"
+
+<% if node['provisioner']['use_on_demand_instance'] %>
+    output="$(ec2run "$ami" \
+      --key "<%= node['genomics']['aws']['worker']['keypair_name'] %>" \
+      --instance-initiated-shutdown-behavior "terminate" \
+      --instance-type "$ec2_type" \
+      --block-device-mapping "/dev/sda1=:10" \
+      --block-device-mapping "/dev/sdb=ephemeral0" \
+    <% if node['genomics']['provisioner']['merged_ephemerals'] %>
+      --block-device-mapping "/dev/sdc=ephemeral1" \
+      --block-device-mapping "/dev/sdd=ephemeral2" \
+      --block-device-mapping "/dev/sde=ephemeral3" \
+    <% end %>
+      --subnet "${az_to_subnet["$zone"]}" \
+      --group "<%= node['genomics']['aws']['worker_security_group'] %>" \
+      --user-data-file "/opt/scripts/cloudinit.cfg" \
+      --instance-count "$nodes")"
+    echo "[$(date)] $output"
+    sirs=`echo "$output" | grep ^INSTANCE | cut -f 2`
+<% else %>
+    output="$(ec2rsi "$ami" \
+      --key "<%= node['genomics']['aws']['worker']['keypair_name'] %>" \
+      --instance-type "$ec2_type" \
+      --block-device-mapping "/dev/sda1=:10" \
+      --block-device-mapping "/dev/sdb=ephemeral0" \
+    <% if node['genomics']['provisioner']['merged_ephemerals'] %>
+      --block-device-mapping "/dev/sdc=ephemeral1" \
+      --block-device-mapping "/dev/sdd=ephemeral2" \
+      --block-device-mapping "/dev/sde=ephemeral3" \
+    <% end %>
+      --subnet "${az_to_subnet["$zone"]}" \
+      --group "<%= node['genomics']['aws']['worker_security_group'] %>" \
+      --user-data-file "/opt/scripts/cloudinit.cfg" \
+      --price "$price" \
+      --instance-count "$nodes")"
+    echo "[$(date)] $output"
+    sirs=`echo "$output" | grep ^SPOTINSTANCEREQUEST | cut -f 2`
+<% end %>
+    echo "[$(date)] $sirs"
+    ec2addtag $sirs --tag "Name=$worker_name" --tag "owner=globus"
+fi

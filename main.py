@@ -89,6 +89,10 @@ solo true
         run_list.append(str(item.strip()))
     to_write["run_list"] = run_list
     to_write["genomics_sec_dir"] = os.path.join(current_path, "secret") # where the secret is kept
+    to_write["nfs_export"] = instance_config["nfs_export_dirs"]
+    to_write["aws"] = {"worker_subnets": instance_config["aws"]["worker_subnets"],
+                        "worker_security_group": instance_config["aws"]["worker_security_group"]}
+    to_write["provisioner"]["use_on_demand_instance"] = instance_config["provisioner"]["use_on_demand_instance"]
     to_write = str(to_write).replace("\'", "\"")
     with open("solo_config.json", "w") as f:
         f.write(to_write)
@@ -102,8 +106,8 @@ solo true
     availability_zone = requests.get((aws_meta_url + "placement/availability-zone")).content
     aws_region = availability_zone[0:-1]
     instance_id = requests.get((aws_meta_url + "instance-id")).content
-    volumes_info = dict(main_config["volumes"].items() + instance_config["volumes"].items())
-    export_dirs = []
+    #volumes_info = dict(main_config["volumes"].items() + instance_config["volumes"].items())
+    volumes_info = instance_config["volumes"]
 
     for volume_name, volume_info in volumes_info.iteritems():
         """
@@ -151,11 +155,8 @@ solo true
                   mount_point=mount_point,
                   mount_point_user=mount_point_user)"""
 
-        mount_point = volume_info["mount_point"]
-        export_dirs.append(mount_point)
-
     # nfs setup
-    nfs_export_dirs = main_config["instance_setup"]["nfs_export_dirs"] + export_dirs
+    nfs_export_dirs = instance_config["nfs_export_dirs"]
     for item in nfs_export_dirs:
         to_insert = "{0} *(rw,sync,root_squash,no_subtree_check)\n".format(item)
         with open('/etc/exports', 'r+') as f:

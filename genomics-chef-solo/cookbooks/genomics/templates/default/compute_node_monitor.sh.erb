@@ -1,0 +1,25 @@
+#!/bin/bash
+
+main_log_dir="<%=node['monitoring']['monitor_compute_node']['log_dir']%>"
+
+instance_id=$(ec2metadata --instance-id)
+work_dir="$main_log_dir/$instance_id"
+mkdir -p $work_dir
+
+metadata=$work_dir/metadata
+
+if [ ! -f $metadata ];
+then
+  echo "$(date +"%Y%m%d")" > $metadata
+fi
+
+echo "-----[$(date)]-----" >> $work_dir/main.log
+echo "***top***" >> $work_dir/main.log
+echo "$(top -b -n1)" >> $work_dir/main.log
+echo "***df***" >> $work_dir/main.log
+echo "$(df -h)" >> $work_dir/main.log
+echo "-------------------" >> $work_dir/main.log
+
+
+rsync -a --delete /var/log $work_dir
+

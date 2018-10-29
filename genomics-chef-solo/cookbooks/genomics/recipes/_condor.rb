@@ -78,14 +78,6 @@ template "/opt/scripts/cloudinit.cfg" do
   mode 0644
 end
 
-
-# load key and secret for this account
-if node['genomics']['aws']['aws_creds_provider']
-  aws_creds = Chef::EncryptedDataBagItem.load("aws", node['genomics']['aws']['aws_creds_provider'])
-else
-  aws_creds = Chef::EncryptedDataBagItem.load("aws", node[:genomics][:aws][:account_id])
-end
-
 # for instances under ec2 classic accounts, if it is in a VPC, when it requests spot price history, it should use a different name for product desccription
 product_system_description = "Linux/UNIX"
 classic_accounts_list = data_bag_item("other", "ec2_classic_accounts_list")["accounts_list"]
@@ -93,12 +85,12 @@ if classic_accounts_list.include?(node[:genomics][:aws][:account_id])
   product_system_description = "Linux/UNIX (Amazon VPC)"
 end
 
+package "ec2-api-tools"
+
 template "/opt/scripts/manage_dynamic_pool.sh" do
   source "manage_dynamic_pool.sh.erb"
   mode 0755
   variables(
-    :aws_access_key => aws_creds['aws_access_key_id'],
-    :aws_secret_key => aws_creds['aws_secret_access_key'],
     :product_system_description => product_system_description
   )
   action :create
