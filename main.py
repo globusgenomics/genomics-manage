@@ -2,10 +2,12 @@ import sys
 import subprocess
 import os
 from pprint import pprint
-from helper import *
 import requests
 import pwd
 import grp
+import json
+import copy
+from helper import *
 
 from optparse import OptionParser
 args=None
@@ -46,22 +48,6 @@ aws_meta_url = "http://169.254.169.254/latest/meta-data/"
 
 
 if action == "launch":
-
-    command = "apt-get update"
-    #subprocess.call(command, shell=True)
-    # install Chef
-    command = "dpkg -i {0}".format(os.path.join(current_path, "genomics-chef-solo/chefdk_1.5.0-1_amd64.deb"))
-    #subprocess.call(command, shell=True)
-    # install git
-    command = "apt-get install git"
-    #subprocess.call(command, shell=True)
-    # install boto3
-    command = "pip insall boto3"
-    #subprocess.call(command, shell=True)
-    # install nfs
-    command = "apt-get install -y nfs-kernel-server"
-    #subprocess.call(command, shell=True)
-
     # prepare configs for chef-solo
     # solo.rb
     node_name = instance_config["name"]
@@ -82,26 +68,38 @@ solo true
 
     # solo_config.json
     to_write = {}
-    tmp = main_config["instance_setup"]["run_list"].split(",")
+    tmp1 = main_config["instance_setup"]["chef"]["run_list_step_1"].split(",")
+    run_list_step_1 = []
+    for item in tmp1:
+        run_list_step_1.append(str(item.strip()))
+    tmp2 = main_config["instance_setup"]["chef"]["run_list_step_2"].split(",")
+    run_list_step_2 = []
+    for item in tmp2:
+        run_list_step_2.append(str(item.strip()))
     run_list = []
     run_list.append(instance_config["worker_type"]) # worker type config
-    for item in tmp:
-        run_list.append(str(item.strip()))
-    to_write["run_list"] = run_list
+    to_write["run_list"] = run_list + run_list_step_1
     to_write["genomics_sec_dir"] = os.path.join(current_path, "secret") # where the secret is kept
     to_write["nfs_export"] = instance_config["nfs_export_dirs"]
     to_write["aws"] = {"worker_subnets": instance_config["aws"]["worker_subnets"],
                         "worker_security_group": instance_config["aws"]["worker_security_group"]}
-    to_write["provisioner"]["use_on_demand_instance"] = instance_config["provisioner"]["use_on_demand_instance"]
+    to_write["provisioner"] = {"use_on_demand_instance": json.dumps(instance_config["provisioner"]["use_on_demand_instance"])}
+    to_write["database"] = {"use_rds_postgresql_server": json.dumps(instance_config["database"]["use_rds_postgresql_server"])}
+
+    to_write_copy = copy.deepcopy(to_write)
+    to_write_copy["run_list"] = run_list + run_list_step_2
     to_write = str(to_write).replace("\'", "\"")
-    with open("solo_config.json", "w") as f:
+    to_write_copy = str(to_write_copy).replace("\'", "\"")
+    with open("solo_config_step_1.json", "w") as f:
         f.write(to_write)
+    with open("solo_config_step_2.json", "w") as f:
+        f.write(to_write_copy)
 
-    # run chef-solo
-    command = "chef-solo -c solo.rb -j solo_config.json"
-    #subprocess.call(command, shell=True)
+    # run chef-solo_step_1
+    command = "chef-solo -c solo.rb -j solo_config_step_1.json"
+    subprocess.call(command, shell=True)
 
-
+    """
     # create and attach the required volumes
     availability_zone = requests.get((aws_meta_url + "placement/availability-zone")).content
     aws_region = availability_zone[0:-1]
@@ -110,7 +108,7 @@ solo true
     volumes_info = instance_config["volumes"]
 
     for volume_name, volume_info in volumes_info.iteritems():
-        """
+        
         if "snapshot_id" in volume_info:
             if volume_info["snapshot_id"] == "current_release":
                 snapshot_id = releases_config[main_config["current_release"]]["snapshots"][volume_name]
@@ -153,7 +151,7 @@ solo true
                   Device=device,
                   file_system=file_system,
                   mount_point=mount_point,
-                  mount_point_user=mount_point_user)"""
+                  mount_point_user=mount_point_user)
 
     # nfs setup
     nfs_export_dirs = instance_config["nfs_export_dirs"]
@@ -177,4 +175,8 @@ solo true
     command = "exportfs -a"
     subprocess.call(command, shell=True)
     command = "service nfs-kernel-server start"
+    subprocess.call(command, shell=True)"""
+
+    # run chef-solo_step_2
+    command = "chef-solo -c solo.rb -j solo_config_step_2.json"
     subprocess.call(command, shell=True)

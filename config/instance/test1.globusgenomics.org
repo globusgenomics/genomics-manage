@@ -32,7 +32,10 @@
     "nfs_export_dirs": ["/home/galaxy", "/opt/galaxy", "/mnt/galaxyTools", "/mnt/galaxyIndices", "/scratch"],
     "provisioner": {
         "use_on_demand_instance": False
-    }
+    },
+    "database": {
+        "use_rds_postgresql_server": True
+    },
     "aws": {
         "kms_key_id": "6272cd5d-362f-4b8d-8593-7f165d239c49",
         "worker_subnets": {
