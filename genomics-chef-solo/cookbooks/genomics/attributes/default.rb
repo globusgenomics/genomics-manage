@@ -21,3 +21,5 @@ default['monitoring']['monitor_compute_node']['log_dir'] = '/scratch/compute_nod
 default['genomics']['logdir'] = '/var/log/genomics/'
 default['genomics']['provisioner']['logfile'] = ::File.join(node['genomics']['logdir'], 'provision.log')
 default['genomics']['provisioner']['error_logfile'] = ::File.join(node['genomics']['logdir'], 'provision.error.log')
+
+default['genomics']['globus_sharing_endpoint']['shared_dir'] = '/scratch/shared'

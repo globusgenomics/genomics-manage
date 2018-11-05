@@ -44,9 +44,6 @@ current_path = os.getcwd() #os.path.dirname(os.path.realpath(__file__))
 
 aws_meta_url = "http://169.254.169.254/latest/meta-data/"
 
-
-
-
 if action == "launch":
     # prepare configs for chef-solo
     # solo.rb
@@ -177,6 +174,15 @@ solo true
     command = "service nfs-kernel-server start"
     subprocess.call(command, shell=True)"""
 
+    # download and configure Galaxy
+    genomics_galaxy_version = instance_config["genomics_galaxy_version"]
+    if genomics_galaxy_version == "current_release":
+        genomics_galaxy_version = releases_config[main_config["current_release"]]["galaxy_repo_commit_hash"]
+    command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git /opt/galaxy; cd /opt/galaxy; git checkout {0}".format(genomics_galaxy_version)
+    #subprocess.call(command, shell=True, preexec_fn=demote(pwd.getpwnam("galaxy").pw_uid, grp.getgrnam("galaxy").gr_gid))
+
+
+
     # run chef-solo_step_2
     command = "chef-solo -c solo.rb -j solo_config_step_2.json"
-    subprocess.call(command, shell=True)
+    #subprocess.call(command, shell=True)

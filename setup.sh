@@ -11,3 +11,4 @@ apt-get install -y python-pip
 #activate
 pip install boto3 
 pip install --upgrade requests
+pip install --upgrade setuptools

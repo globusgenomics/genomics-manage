@@ -1,18 +1,39 @@
-# -------------------------------------------------------------------------- #
-# Copyright 2014-2015, University of Chicago                                 #
-#                                                                            #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may    #
-# not use this file except in compliance with the License. You may obtain    #
-# a copy of the License at                                                   #
-#                                                                            #
-# http://www.apache.org/licenses/LICENSE-2.0                                 #
-#                                                                            #
-# Unless required by applicable law or agreed to in writing, software        #
-# distributed under the License is distributed on an "AS IS" BASIS,          #
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
-# See the License for the specific language governing permissions and        #
-# limitations under the License.                                             #
-# -------------------------------------------------------------------------- #
 
-# TEMPORARY: check /etc/grid-security/gc-cert.pem, older instances have this file, if it exists, then ignore Globus installation
-include_recipe "globus::globus_endpoint" if not ::File.exists?('/etc/grid-security/grid-mapfile')
+# install globus-sdk
+globus_sdk_dir = Chef::Config[:file_cache_path] + '/globus-sdk-python'
+bash 'install globus-sdk' do
+  user 'root'
+  code <<-EOH
+  mkdir #{globus_sdk_dir}
+  git clone https://github.com/globus/globus-sdk-python.git #{globus_sdk_dir}
+  cd #{globus_sdk_dir}
+  python setup.py install
+  EOH
+  not_if { Dir.exist?(globus_sdk_dir) }
+end
+
+# globus genomics dir
+directory "/home/galaxy/.globusgenomics" do
+  owner     "galaxy"
+  group     "galaxy"
+  mode      0700
+  action    :create
+end
+
+cookbook_file "/home/galaxy/.globusgenomics/globus_creds" do
+  action    :create_if_missing
+  source    "globus_creds"
+  owner     "galaxy"
+  group     "galaxy"
+  mode      0400
+end
+
+cookbook_file "/home/galaxy/.globusgenomics/globus_user_granted" do
+  action    :create_if_missing
+  source    "globus_user_granted"
+  owner     "galaxy"
+  group     "galaxy"
+  mode      0400
+end
+
+include_recipe "globus::globus_endpoint" 

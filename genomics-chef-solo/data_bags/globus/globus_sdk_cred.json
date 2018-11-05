@@ -1,0 +1,39 @@
+{
+  "id": "globus_sdk_cred",
+  "client_id": {
+    "encrypted_data": "N2dstKpPh126qPOwB38+F2g8hgwDD7Qe4pvo2XwgwUycG+jmtcL06gomsXtT\n0Mr6L2AhVCWkjL3Ve6Y9T7+bkg==\n",
+    "iv": "w5BmtUj2DkKlE7czAgb0VQ==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  },
+  "access_token": {
+    "encrypted_data": "n8cFs4k7Oi4HMciY+mMOSXCIxe+U6gNJZPSqFTwEDmEibeMOEE/aFZYJyBku\ne0B9qqaF3wbqQKT0uwxpIe1PVy4kAgRTgHb3aeWKAy6lSn/d8HQkZA/ebcFO\njet9VG+zLY274Qr6EFeRAowc7bEcWQ==\n",
+    "iv": "YFuyRK0wjLvt1x/mkDYycQ==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  },
+  "scope": {
+    "encrypted_data": "ioUlKZXM85aZ7OWZcUV0uWJ1V3CQzKT2fR3lyi7INAMrtqFJMEc+p1QjZMFo\nA5wmA7H1JW2LL+VOk7irHRSfuyGRxtHyTSqXjm6TBij3bus=\n",
+    "iv": "MYF3zdyYiDQqkxN2DLaBjA==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  },
+  "expires_at_seconds": {
+    "encrypted_data": "bcUsqWtFUEfLSA+cu9Q1FqfgJh5rXWZgRuzdhuje+Po=\n",
+    "iv": "b2EwuFHC9/9sxgQjS1W9bg==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  },
+  "token_type": {
+    "encrypted_data": "H52rG5L6jxk3ZMljaCWYy+QC2ZhQ/5cEq0ByrFkTIE0=\n",
+    "iv": "Tra6UQahEWt2ysyxnrevEA==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  },
+  "refresh_token": {
+    "encrypted_data": "5tSPcQdQbmnf5qGCZs9wVgklYfedBwxsBtJSqGRZszYTaLbs+Ja0U13v9lXk\nExYdQ97es9nUds3kxPhnBov3Gez67cvLuB/wRx85PFhGCu66az+/eKpctz4m\nvdyTfmAuUotc/8SN1KGq3tp5dDbEmA==\n",
+    "iv": "oBqVaHf6RJcOPM9iV8ZW6w==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  }
+}

@@ -1,5 +1,6 @@
 {
     "name": "test1.globusgenomics.org",
+    "genomics_galaxy_version": "current_release",
     "worker_type": "role[r3_8xlarge_workers]",
     "volumes": {
         "scratch_volume": {

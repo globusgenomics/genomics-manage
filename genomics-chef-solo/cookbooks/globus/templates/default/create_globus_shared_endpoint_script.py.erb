@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+
+"""
+assume ENDPOINT_NAME is created, shared or not, this script modifies the endpoint
+to be a shared endpoint
+"""
+
+import globus_sdk
+import re
+
+ENDPOINT_NAME = "galaxy#<%=node['system']['short_hostname']%>"
+SHARED_DIR = "/scratch"
+
+CRED_FILE = "/home/galaxy/.globusgenomics/globus_transfer_cred"
+
+client_id = None
+transfer_rt = None
+transfer_at = None
+expires_at_s = None
+with open(CRED_FILE) as f:
+    for line in f:
+        if line.startswith("client_id:"):
+            client_id = re.sub("client_id:","",line,count=1).strip()
+        if line.startswith("refresh_token:"):
+            transfer_rt = re.sub("refresh_token:","",line,count=1).strip()
+        if line.startswith("access_token:"):
+            transfer_at = re.sub("access_token:","",line,count=1).strip()
+        if line.startswith("expires_at_seconds:"):
+            expires_at_s = int(re.sub("expires_at_seconds:","",line,count=1).strip())
+
+if None in [client_id, transfer_rt, transfer_at, expires_at_s]:
+    msg = "Cannot get the creds needed for globus_sdk"
+    raise Exception(msg)
+
+client = globus_sdk.NativeAppAuthClient(client_id)
+
+authorizer = globus_sdk.RefreshTokenAuthorizer(
+                transfer_rt, client, access_token=transfer_at, expires_at=expires_at_s)
+
+tc = globus_sdk.TransferClient(authorizer=authorizer)
+
+endpoint = None
+
+# Search for the endpoint
+for ep in tc.endpoint_search(filter_fulltext=ENDPOINT_NAME, filter_scope='my-endpoints'):
+    if ep["display_name"] == ENDPOINT_NAME or ep["canonical_name"] == ENDPOINT_NAME:
+        endpoint = ep
+        break
+
+if endpoint == None:
+    msg = "Cannot find endpoint {0}".format(ENDPOINT_NAME)
+    raise Exception(msg)
+
+
+if endpoint["host_endpoint_id"] == None:
+    print "changing the endpoint to be a shared endpoint"
+    # change the name of the host endpoint
+    endpoint_id = endpoint["id"]
+    non_shared_endpoint_name = "{0}_0".format(ENDPOINT_NAME)
+    ep_data = {
+        "display_name": non_shared_endpoint_name,
+        "canonical_name": non_shared_endpoint_name
+    }
+    update_result = tc.update_endpoint(endpoint_id,ep_data)
+    print update_result
+    # create shared endpoint
+    shared_ep_data = {
+        "DATA_TYPE": "shared_endpoint",
+        "display_name": ENDPOINT_NAME,
+        "canonical_name": ENDPOINT_NAME,
+        "host_endpoint": endpoint_id,
+        "host_path": SHARED_DIR
+    }
+    create_result = tc.create_shared_endpoint(shared_ep_data)
+    print create_result
