@@ -11,11 +11,11 @@ az_to_subnet["<%= zone %>"]="<%=subnet%>"
 <% end %>
 
 
-ec2_type='<%=node['genomics']['provisioner']['worker_type']%>'
-worker_cpus=<%=node['genomics']['provisioner']['worker_num_cpus']%>
-price='<%=node['genomics']['provisioner']['worker_bid_price']%>'
+ec2_type='<%=node['provisioner']['worker']['worker_type']%>'
+worker_cpus=<%=node['provisioner']['worker']['worker_num_cpus']%>
+price='<%=node['provisioner']['worker']['worker_bid_price']%>'
 
-<% if node['genomics']['provisioner']['worker_is_hvm'] %>
+<% if node['provisioner']['worker']['worker_is_hvm'] %>
 ami='<%=node['genomics']['provisioner']['worker_hvm_ami']%>'
 <% else %>
 ami='<%=node['genomics']['provisioner']['worker_pv_ami']%>'
@@ -126,7 +126,7 @@ if [[ $nodes -gt 0 ]]; then
       --instance-type "$ec2_type" \
       --block-device-mapping "/dev/sda1=:10" \
       --block-device-mapping "/dev/sdb=ephemeral0" \
-    <% if node['genomics']['provisioner']['merged_ephemerals'] %>
+    <% if node['provisioner']['worker']['merged_ephemerals'] %>
       --block-device-mapping "/dev/sdc=ephemeral1" \
       --block-device-mapping "/dev/sdd=ephemeral2" \
       --block-device-mapping "/dev/sde=ephemeral3" \
@@ -143,7 +143,7 @@ if [[ $nodes -gt 0 ]]; then
       --instance-type "$ec2_type" \
       --block-device-mapping "/dev/sda1=:10" \
       --block-device-mapping "/dev/sdb=ephemeral0" \
-    <% if node['genomics']['provisioner']['merged_ephemerals'] %>
+    <% if node['provisioner']['worker']['merged_ephemerals'] %>
       --block-device-mapping "/dev/sdc=ephemeral1" \
       --block-device-mapping "/dev/sdd=ephemeral2" \
       --block-device-mapping "/dev/sde=ephemeral3" \

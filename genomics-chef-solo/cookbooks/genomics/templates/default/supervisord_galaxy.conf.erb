@@ -1,0 +1,31 @@
+[supervisord]
+nodaemon=false
+
+[program:galaxy_web]
+command         = /opt/galaxy/.venv/bin/uwsgi --virtualenv .venv --ini-paste config/galaxy.ini --logdate --master --processes <%=node['cpu']['total']%> --threads 2 --logto <%=node['genomics']['galaxy']['logfile']%> --socket 127.0.0.1:<%=node['genomics']['galaxy']['port']%> --pythonpath lib --stats 127.0.0.1:9191
+directory       = /opt/galaxy
+umask           = 022
+autostart       = true
+autorestart     = true
+startsecs       = 20
+user            = galaxy
+environment     = PATH=/opt/galaxy/.venv:/opt/galaxy/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin,LOGNAME=galaxy,USER=galaxy,HOME=/home/galaxy,USERNAME=galaxy
+numprocs        = 1
+stopsignal      = INT
+startretries    = 15
+
+[program:handler]
+command         = /opt/galaxy/.venv/bin/python ./lib/galaxy/main.py -c config/galaxy.ini --server-name=handler%(process_num)s --log-file=/var/log/genomics/handler.log
+directory       = /opt/galaxy
+process_name    = handler%(process_num)s
+numprocs        = 2
+umask           = 022
+autostart       = true
+autorestart     = true
+startsecs       = 20
+user            = galaxy
+startretries    = 15
+environment     = PATH=/opt/galaxy/.venv:/opt/galaxy/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin,LOGNAME=galaxy,USER=galaxy,HOME=/home/galaxy,USERNAME=galaxy
+
+[group:galaxy]
+programs = handler, galaxy_web

@@ -1,7 +1,6 @@
 {
     "name": "test1.globusgenomics.org",
     "genomics_galaxy_version": "current_release",
-    "worker_type": "role[r3_8xlarge_workers]",
     "volumes": {
         "scratch_volume": {
             "size": 100,
@@ -32,10 +31,25 @@
     },
     "nfs_export_dirs": ["/home/galaxy", "/opt/galaxy", "/mnt/galaxyTools", "/mnt/galaxyIndices", "/scratch"],
     "provisioner": {
+        "worker": {
+            "worker_type": "r3.8xlarge",
+            "worker_bid_price": "3.00",
+            "worker_num_cpus": "32",
+            "worker_is_hvm": True,
+            "merged_ephemerals": True
+        },
         "use_on_demand_instance": False
     },
     "database": {
         "use_rds_postgresql_server": True
+    },
+    "globus": {
+        "globus_group_id": "920e3148-a6d3-11e2-8266-12313809f035"
+    },
+    "galaxy": {
+        "tool_data_path": "tool-data",
+        "len_file_path": "/mnt/galaxyIndices/galaxy/chrom",
+        "admin_users": "test@test.org"
     },
     "aws": {
         "kms_key_id": "6272cd5d-362f-4b8d-8593-7f165d239c49",

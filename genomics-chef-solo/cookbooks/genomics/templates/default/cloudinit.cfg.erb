@@ -6,7 +6,7 @@ packages:
  - libssl0.9.8
  - libvirt0
  - libdate-manip-perl
-<% if node['genomics']['provisioner']['merged_ephemerals'] %>
+<% if node['provisioner']['worker']['merged_ephemerals'] %>
 # LVM
  - lvm2
 <% end %>
@@ -57,7 +57,7 @@ runcmd:
  - [ sed, -i.bak, '/xvdb/d', /etc/fstab ]
  - [ mkdir, -p, /ephemeral/0 ]
  - [ umount, /mnt ]
-<% if node['genomics']['provisioner']['merged_ephemerals'] %>
+<% if node['provisioner']['worker']['merged_ephemerals'] %>
 # ...using merged ephemeral volumes
  - [ pvcreate, /dev/xvdb ]
  - [ pvcreate, /dev/xvdc ]
@@ -131,7 +131,7 @@ runcmd:
  - echo 'ALLOW_READ = *' >> /etc/condor/condor_config.local
  - echo 'ALLOW_WRITE = *' >> /etc/condor/condor_config.local
  - echo 'EXECUTE = /ephemeral/0/condor' >> /etc/condor/condor_config.local
- - echo 'SLOT_TYPE_1 = cpus=<%=node['genomics']['provisioner']['worker_num_cpus']%>' >> /etc/condor/condor_config.local
+ - echo 'SLOT_TYPE_1 = cpus=<%=node['provisioner']['worker']['worker_num_cpus']%>' >> /etc/condor/condor_config.local
  - echo 'NUM_SLOTS_TYPE_1 = 1' >> /etc/condor/condor_config.local
  - echo 'SLOT_TYPE_1_PARTITIONABLE = true' >> /etc/condor/condor_config.local
  - echo 'FILESYSTEM_DOMAIN = <%= node['system']['domain_name'] %>' >> /etc/condor/condor_config.local
