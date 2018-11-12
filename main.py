@@ -5,7 +5,6 @@ from pprint import pprint
 import requests
 import pwd
 import grp
-import json
 import copy
 from string import Template
 import ConfigParser
@@ -85,21 +84,13 @@ solo true
     to_write["aws"] = {"worker_subnets": instance_config["aws"]["worker_subnets"],
                         "worker_security_group": instance_config["aws"]["worker_security_group"]
                       }
-    to_write["provisioner"] = {"use_on_demand_instance": json.dumps(instance_config["provisioner"]["use_on_demand_instance"]),
-                               "worker": {
-                                    "worker_type": instance_config["provisioner"]["worker"]["worker_type"],
-                                    "worker_bid_price": instance_config["provisioner"]["worker"]["worker_bid_price"],
-                                    "worker_num_cpus": instance_config["provisioner"]["worker"]["worker_num_cpus"],
-                                    "worker_is_hvm": json.dumps(instance_config["provisioner"]["worker"]["worker_is_hvm"]),
-                                    "merged_ephemerals": json.dumps(instance_config["provisioner"]["worker"]["merged_ephemerals"])
-                                    }
-                              }
-    to_write["database"] = {"use_rds_postgresql_server": json.dumps(instance_config["database"]["use_rds_postgresql_server"])}
+    to_write["provisioner"] = instance_config["provisioner"]
+    to_write["database"] = instance_config["database"]
 
     to_write_copy = copy.deepcopy(to_write)
     to_write_copy["run_list"] = run_list_step_2
-    to_write = str(to_write).replace("\'", "\"")
-    to_write_copy = str(to_write_copy).replace("\'", "\"")
+    to_write = str(to_write).replace("\'", "\"").replace(": False", ": false").replace(": True", ": true")
+    to_write_copy = str(to_write_copy).replace("\'", "\"").replace(": False", ": false").replace(": True", ": true")
     with open("solo_config_step_1.json", "w") as f:
         f.write(to_write)
     with open("solo_config_step_2.json", "w") as f:
@@ -109,7 +100,6 @@ solo true
     command = "chef-solo -c solo.rb -j solo_config_step_1.json"
     subprocess.call(command, shell=True)
 
-    """
     # create and attach the required volumes
     availability_zone = requests.get((aws_meta_url + "placement/availability-zone")).content
     aws_region = availability_zone[0:-1]
@@ -185,14 +175,14 @@ solo true
     command = "exportfs -a"
     subprocess.call(command, shell=True)
     command = "service nfs-kernel-server start"
-    subprocess.call(command, shell=True)"""
+    subprocess.call(command, shell=True)
 
     # download and configure Galaxy
     genomics_galaxy_version = instance_config["genomics_galaxy_version"]
     if genomics_galaxy_version == "current_release":
         genomics_galaxy_version = releases_config[main_config["current_release"]]["galaxy_repo_commit_hash"]
     command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git /opt/galaxy; cd /opt/galaxy; git checkout {0}".format(genomics_galaxy_version)
-    #subprocess.call(command, shell=True, preexec_fn=demote(pwd.getpwnam("galaxy").pw_uid, grp.getgrnam("galaxy").gr_gid))
+    subprocess.call(command, shell=True, preexec_fn=demote(pwd.getpwnam("galaxy").pw_uid, grp.getgrnam("galaxy").gr_gid))
 
     # configure galaxy.ini
     if instance_config["database"]["use_rds_postgresql_server"]:

@@ -132,7 +132,7 @@ if [[ $nodes -gt 0 ]]; then
       --block-device-mapping "/dev/sde=ephemeral3" \
     <% end %>
       --subnet "${az_to_subnet["$zone"]}" \
-      --group "<%= node['genomics']['aws']['worker_security_group'] %>" \
+      --group "<%= node['aws']['worker_security_group'] %>" \
       --user-data-file "/opt/scripts/cloudinit.cfg" \
       --instance-count "$nodes")"
     echo "[$(date)] $output"
@@ -149,7 +149,7 @@ if [[ $nodes -gt 0 ]]; then
       --block-device-mapping "/dev/sde=ephemeral3" \
     <% end %>
       --subnet "${az_to_subnet["$zone"]}" \
-      --group "<%= node['genomics']['aws']['worker_security_group'] %>" \
+      --group "<%= node['aws']['worker_security_group'] %>" \
       --user-data-file "/opt/scripts/cloudinit.cfg" \
       --price "$price" \
       --instance-count "$nodes")"
