@@ -4,6 +4,7 @@
 #
 # Copyright:: 2018, The Authors, All Rights Reserved.
 
+include_recipe "genomics::set_system"
 include_recipe "genomics::set_ec2_metadata"
 include_recipe "genomics::_user_setup"
 include_recipe "genomics::_postfix"
