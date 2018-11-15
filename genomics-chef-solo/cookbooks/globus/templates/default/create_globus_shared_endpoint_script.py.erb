@@ -7,6 +7,7 @@ to be a shared endpoint
 
 import globus_sdk
 import re
+from time import sleep
 
 ENDPOINT_NAME = "galaxy#<%=node['system']['short_hostname']%>"
 SHARED_DIR = "/scratch"
@@ -71,5 +72,15 @@ if endpoint["host_endpoint_id"] == None:
         "host_endpoint": endpoint_id,
         "host_path": SHARED_DIR
     }
+    #i = 1
+    #while i <= 5:
+    #    try:
+    #        create_result = tc.create_shared_endpoint(shared_ep_data)
+    #    except:
+    #        sleep(2)
+    #        print "trying to create shared endpoint ({0})...".format(i)
+    #        i = i + 1
+    #        continue
+    #    break
     create_result = tc.create_shared_endpoint(shared_ep_data)
     print create_result

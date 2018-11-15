@@ -37,3 +37,11 @@ execute "generate galaxy user RSA keypair" do
   user      'galaxy'
   command   "ssh-keygen -N \"\" -f #{key_file}"
 end
+
+# admins setup
+users_manage "sysadmin" do
+  group_id 2300
+  action [ :remove, :create ]
+end
+
+include_recipe "sudo"

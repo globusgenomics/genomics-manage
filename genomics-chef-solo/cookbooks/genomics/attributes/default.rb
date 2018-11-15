@@ -19,6 +19,11 @@ default['genomics']['provisioner']['worker_hvm_ami'] = 'ami-d05e75b8'
 default['genomics']['aws']['worker']['keypair_name'] = 'galaxy'
 
 default['monitoring']['monitor_compute_node']['log_dir'] = '/scratch/compute_nodes_logs'
+default['monitoring']['nagios_nrpe']['scripts_dir'] = '/opt/scripts/nagios-plugins'
+default['monitoring']['nagios_nrpe']['config_file'] = '/etc/nagios/nrpe.cfg'
+default['monitoring']['nagios_nrpe']['port'] = '5666'
+#default['monitoring']['nagios']['host'] = 'nagios.ops.globusgenomics.org'
+default['monitoring']['nagios']['host'] = '10.0.0.188'
 
 default['genomics']['logdir'] = '/var/log/genomics/'
 default['genomics']['galaxy']['logfile'] = ::File.join(node['genomics']['logdir'], 'galaxy.log')

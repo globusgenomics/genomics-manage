@@ -1,0 +1,16 @@
+{
+  "id": "sulakhe",
+  "gid": "users",
+  "groups": [
+    "sysadmin"
+  ],
+  "uid": "2003",
+  "shell": "/bin/bash",
+  "comment": "Dina Sulakhe",
+  "ssh_keys": "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAn+/VJLbSEFt5NGOVEKJtH+CP8M7o/wb06MaYta8ZQYY6oF7wUUvf5wDZuEUwzhOzJQpebXWRI/bfd0RqT0bQsZ04hyCaU5YoldA1J1aU5CiT/TnSFQgbiAq0BTDyvDr1ak2t1tBbmuMtmb67TsIylUMiSbKWBNm73jO4355BRdm+qe02m7CQ09ciRhWA0jfOqzq6/zXd88HR3Y/EmhZxvd5JZ4Fips9tjY31+AQftFW1bQf0Z3s7g6muz3ritvrkECNdSeStFRM/7cQhNKXh749a8LuM/zZLjUSPOPTtRnE1ZwnmFbnn/zcFvqCoF0ie+uoMmLGxhajsh8q6FLILTQ== sulakhe@sulakhes-MacBook-Pro.local",
+  "nagios": {
+    "email": "sulakhe@uchicago.edu"
+  },
+  "htpasswd": "$apr1$jJ/KAQ05$m6L6bkHKqam2mWcBIz9r7/",
+  "password": "$1$xyz$wI9Aa1ZZ6I9HCzl2cMppj0"
+}

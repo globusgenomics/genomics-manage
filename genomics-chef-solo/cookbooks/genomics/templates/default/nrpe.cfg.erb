@@ -1,0 +1,14 @@
+log_facility=daemon
+pid_file=/var/run/nagios/nrpe.pid
+server_port=<%=node['monitoring']['nagios_nrpe']['port']%>
+nrpe_user=nrpe
+nrpe_group=nrpe
+allowed_hosts=<%=node['monitoring']['nagios']['host']%>
+dont_blame_nrpe=1
+debug=0
+command_timeout=60
+connection_timeout=300
+include_dir=/etc/nagios/nrpe.d/
+
+command[condor]=<%="#{node['monitoring']['nagios_nrpe']['scripts_dir']}/monitor_condor.py"%>
+command[volume]=<%="#{node['monitoring']['nagios_nrpe']['scripts_dir']}/monitor_volume.py"%>

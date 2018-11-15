@@ -1,0 +1,16 @@
+{
+  "id": "madduri",
+  "gid": "users",
+  "groups": [
+    "sysadmin"
+  ],
+  "uid": "2002",
+  "shell": "/bin/bash",
+  "comment": "Ravi Madduri",
+  "ssh_keys": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC44OeEquTomM5gqPslrpn7UgKu33S+qokPWbczZzo8RZw4G4sguYWFWjRJv9GRrww2FXO9od0op4SFaDNY3v1LBSeV1I9zNwu8oXBxh4TS6GwBl/0GeWqHVheKNr4X3WdKV50u5PQf02602Mp1hT2pufJaxp7yf/V3wFJMjvrPzujV8GrmaLJcYPkzu9MJbmbprWyZCB3vyRpKhO3XN0uyWmx/yPgjOwc830wV8mqRGxRNbHTZGRB8/8PsN7UNWngYiSbjeHi/cKlclKoX3WNWkACJ9PrikIslYQSmL+yMys+CmrY+kUaHX+ZuZSNL8cHccI5SHZllPlO9gR0kEJS5 madduri@Madduris-Computer.local",
+  "nagios": {
+    "email": "madduri@anl.gov"
+  },
+  "htpasswd": "$apr1$xptxOKTM$K7LOPz//9WNjTLYyCRIlP1",
+  "password": "$1$i14377gh$evO6g03X2STXBmqUy4EIe1"
+}

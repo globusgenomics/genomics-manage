@@ -16,14 +16,25 @@ from optparse import OptionParser
 args=None
 parser = OptionParser()
 
-parser.add_option("--action", dest="action", help="launch or update")
+"""
+Example commands:
+python main.py --action launch --instance test1.globusgenomics.org
+python main.py --action update --instance test1.globusgenomics.org --update-type chef-solo_step_2
+"""
+
+parser.add_option("--action", dest="action", help="launch, config, update")
 parser.add_option("--instance", dest="instance", help="instance")
+parser.add_option("--update-type", dest="update_type", help="chef-solo_step_2")
 
 options, args = parser.parse_args(args)
 
 action = options.action
 if action not in ["launch", "update"]:
     sys.exit("invalid action")
+
+update_type = options.update_type
+if action == "update" and update_type == None:
+    sys.exit("Please specify --update-type")
 
 instance = options.instance
 
@@ -48,12 +59,12 @@ aws_meta_url = "http://169.254.169.254/latest/meta-data/"
 creds_config = ConfigParser.ConfigParser()
 creds_config.read("secret/creds")
 
-if action == "launch":
-    # prepare configs for chef-solo
-    # solo.rb
-    node_name = instance_config["name"]
-    node_name_short = node_name.split(".")[0]
-    to_write = """
+
+# prepare configs for chef-solo
+# solo.rb
+node_name = instance_config["name"]
+node_name_short = node_name.split(".")[0]
+to_write = """
 node_name "%s"
 
 current_dir = File.dirname(__FILE__)
@@ -63,39 +74,42 @@ cookbook_path "#{current_dir}/genomics-chef-solo/cookbooks"
 data_bag_path "#{current_dir}/genomics-chef-solo/data_bags"
 role_path "#{current_dir}/genomics-chef-solo/roles"
 solo true
-    """ % (node_name)
+""" % (node_name)
 
-    with open("solo.rb", "w") as f:
-        f.write(to_write)
+with open("solo.rb", "w") as f:
+    f.write(to_write)
 
-    # solo_config.json
-    to_write = {}
-    tmp1 = main_config["instance_setup"]["chef"]["run_list_step_1"].split(",")
-    run_list_step_1 = []
-    for item in tmp1:
-        run_list_step_1.append(str(item.strip()))
-    tmp2 = main_config["instance_setup"]["chef"]["run_list_step_2"].split(",")
-    run_list_step_2 = []
-    for item in tmp2:
-        run_list_step_2.append(str(item.strip()))
-    to_write["run_list"] = run_list_step_1
-    to_write["genomics_sec_dir"] = os.path.join(current_path, "secret") # where the secret is kept
-    to_write["nfs_export"] = instance_config["nfs_export_dirs"]
-    to_write["aws"] = {"worker_subnets": instance_config["aws"]["worker_subnets"],
-                        "worker_security_group": instance_config["aws"]["worker_security_group"]
-                      }
-    to_write["provisioner"] = instance_config["provisioner"]
-    to_write["database"] = instance_config["database"]
+# solo_config.json
+to_write = {}
+tmp1 = main_config["instance_setup"]["chef"]["run_list_step_1"].split(",")
+run_list_step_1 = []
+for item in tmp1:
+    run_list_step_1.append(str(item.strip()))
+tmp2 = main_config["instance_setup"]["chef"]["run_list_step_2"].split(",")
+run_list_step_2 = []
+for item in tmp2:
+    run_list_step_2.append(str(item.strip()))
+to_write["run_list"] = run_list_step_1
+to_write["genomics_sec_dir"] = os.path.join(current_path, "secret") # where the secret is kept
+to_write["nfs_export"] = instance_config["nfs_export_dirs"]
+to_write["aws"] = {"worker_subnets": instance_config["aws"]["worker_subnets"],
+                    "worker_security_group": instance_config["aws"]["worker_security_group"]
+                  }
+to_write["provisioner"] = instance_config["provisioner"]
+to_write["database"] = instance_config["database"]
 
-    to_write_copy = copy.deepcopy(to_write)
-    to_write_copy["run_list"] = run_list_step_2
-    to_write = str(to_write).replace("\'", "\"").replace(": False", ": false").replace(": True", ": true")
-    to_write_copy = str(to_write_copy).replace("\'", "\"").replace(": False", ": false").replace(": True", ": true")
-    with open("solo_config_step_1.json", "w") as f:
-        f.write(to_write)
-    with open("solo_config_step_2.json", "w") as f:
-        f.write(to_write_copy)
+to_write_copy = copy.deepcopy(to_write)
+to_write_copy["run_list"] = run_list_step_2
+to_write = str(to_write).replace("\'", "\"").replace(": False", ": false").replace(": True", ": true")
+to_write_copy = str(to_write_copy).replace("\'", "\"").replace(": False", ": false").replace(": True", ": true")
+with open("solo_config_step_1.json", "w") as f:
+    f.write(to_write)
+with open("solo_config_step_2.json", "w") as f:
+    f.write(to_write_copy)
 
+
+# launch action
+if action == "launch":
     # run chef-solo_step_1
     command = "chef-solo -c solo.rb -j solo_config_step_1.json"
     subprocess.call(command, shell=True)
@@ -251,7 +265,22 @@ solo true
         with open("/opt/galaxy/config/tool_conf.xml", "w") as f:
             f.write(updated_content)
 
-
     # run chef-solo_step_2
     command = "chef-solo -c solo.rb -j solo_config_step_2.json"
     subprocess.call(command, shell=True)
+
+# update action
+if action == "update":
+    if update_type == "chef-solo_step_2":
+        # run chef-solo_step_2
+        command = "chef-solo -c solo.rb -j solo_config_step_2.json"
+        subprocess.call(command, shell=True)
+    elif update_type == "chef-solo_step_1":
+        # run chef-solo_step_1
+        command = "chef-solo -c solo.rb -j solo_config_step_1.json"
+        subprocess.call(command, shell=True)
+    else:
+        sys.exit("update type not supported.")
+
+
+

@@ -107,3 +107,12 @@ execute "galaxy_start" do
  action     :nothing
  subscribes :run, 'execute[supervisorctl_start]', :immediately
 end
+
+# galaxy ops
+# run set_user_disk_usage.py  script regularly, to reset user disk usage information
+cron "set_user_disk_usage" do
+  user      "galaxy"
+  minute    "0"
+  hour      "2"
+  command   "#{node['galaxy']['dir']}/.venv/bin/python #{node['galaxy']['dir']}/scripts/set_user_disk_usage.py"
+end

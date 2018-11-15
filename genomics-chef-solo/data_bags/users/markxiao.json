@@ -1,0 +1,16 @@
+{
+  "id": "markxiao",
+  "gid": "users",
+  "groups": [
+    "sysadmin"
+  ],
+  "uid": "2016",
+  "shell": "/bin/bash",
+  "comment": "Mark Xiao",
+  "ssh_keys": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDO3Jx84zKargKDjCmQMuwrxA7yUS61rjNkkFG5CiMZb4PTNYwlQJZbz0/UEyPp0r7L1cb+0UManAvzySDOc28ovZGoe466PE6Gm294ps3to1JlfqMa7nJ/hnEQ2XKWm0wUYYusF7HLcyZllceBkeVU4DrxwShZHhvnka8dNR7+z+B/0WkzXfOWKTktsbVrb+rgo8SxPoyWr1/5kHIucGbbTQVVb7CmAdkWmBlUUBY+xFIqWv0GeT8rp3EIyWvLeeTDuos4JmTMgpaGdhilJqokLjOqWALYwyPSP1HNYIQEVGVVDBJmhQJt5A5ql6+bDRfN3tWd9aC/vHmYp+x2kGUv mark@Marks-MacBook-Pro.local",
+  "nagios": {
+    "email": "xiao2@uchicago.edu"
+  },
+  "htpasswd": "$apr1$N15E/.Td$07orSLvJXs.J4B1JxMhrK.",
+  "password": "$1$xyz$7YpVBHZ.0lAgYcbC0Dy8R0"
+}
