@@ -2,3 +2,5 @@
 client_id = 
 client_secret = 
 redirect_uri = https://test1.globusgenomics.org
+
+[globus_group]

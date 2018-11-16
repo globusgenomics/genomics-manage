@@ -18,12 +18,3 @@ node.normal['system']['packages']['install'] = [
 
 include_recipe "system::default"
 include_recipe "apt::default"
-
-# add keys
-# TODO
-cookbook_file "/home/ubuntu/.ssh/authorized_keys" do
-  source    "user_keys"
-  owner     "ubuntu"
-  group     "ubuntu"
-  mode      0600
-end

@@ -96,10 +96,15 @@ template "/opt/scripts/manage_dynamic_pool.sh" do
   action :create
 end
 
+service "cron" do
+  action :nothing
+end
+
 file "/etc/cron.d/manage_dynamic_pool" do
   action    :delete
 end
 cron "galaxy provisioner" do
   minute    "*/2"
   command   "/opt/scripts/manage_dynamic_pool.sh #{node['system']['short_hostname']} >> #{node['genomics']['provisioner']['logfile']} 2>>#{node['genomics']['provisioner']['error_logfile']}"
+  notifies  :restart, "service[cron]"
 end
