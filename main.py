@@ -5,11 +5,7 @@ from pprint import pprint
 import requests
 import pwd
 import grp
-import copy
-from string import Template
 import ConfigParser
-import difflib
-import re
 from helper import *
 
 from optparse import OptionParser
@@ -17,26 +13,25 @@ args=None
 parser = OptionParser()
 
 """
+run as root
 Example commands:
 python main.py --action launch --instance test1.globusgenomics.org
 python main.py --action update --instance test1.globusgenomics.org --update-type chef-solo_step_2
+python main.py --action update --instance test1.globusgenomics.org --update-type chef-solo_step_1
+python main.py --action update --instance test1.globusgenomics.org --update-type galaxy --backup-galaxy
 """
 
 parser.add_option("--action", dest="action", help="launch, config, update")
 parser.add_option("--instance", dest="instance", help="instance")
-parser.add_option("--update-type", dest="update_type", help="chef-solo_step_2")
+parser.add_option("--update-type", dest="update_type", help="update type")
+parser.add_option("--backup-galaxy", dest="backup_galaxy", help="backup old galaxy when update galaxy", action="store_true", default=False)
 
 options, args = parser.parse_args(args)
 
-action = options.action
-if action not in ["launch", "update"]:
+# check the inputs
+if options.action not in ["launch", "update"]:
     sys.exit("invalid action")
-
-update_type = options.update_type
-if action == "update" and update_type == None:
-    sys.exit("Please specify --update-type")
-
-instance = options.instance
+assert options.instance != None
 
 with open("config/main.config") as f:
     main_config = eval(f.read())
@@ -48,7 +43,7 @@ with open("config/releases.config") as f:
 
 pprint(releases_config)
 
-instance_config_path = "config/instance/{0}".format(instance)
+instance_config_path = "config/instance/{0}".format(options.instance)
 with open(instance_config_path) as f:
     instance_config = eval(f.read())
 
@@ -79,40 +74,22 @@ solo true
 with open("solo.rb", "w") as f:
     f.write(to_write)
 
-# solo_config.json
-to_write = {}
-tmp1 = main_config["instance_setup"]["chef"]["run_list_step_1"].split(",")
-run_list_step_1 = []
-for item in tmp1:
-    run_list_step_1.append(str(item.strip()))
-tmp2 = main_config["instance_setup"]["chef"]["run_list_step_2"].split(",")
-run_list_step_2 = []
-for item in tmp2:
-    run_list_step_2.append(str(item.strip()))
-to_write["run_list"] = run_list_step_1
-to_write["genomics_sec_dir"] = os.path.join(current_path, "secret") # where the secret is kept
-to_write["nfs_export"] = instance_config["nfs_export_dirs"]
-to_write["aws"] = {"worker_subnets": instance_config["aws"]["worker_subnets"],
+# solo_config.json base configs
+solo_config_base = {}
+solo_config_base["genomics_sec_dir"] = os.path.join(current_path, "secret") # where the secret is kept
+solo_config_base["nfs_export"] = instance_config["nfs_export_dirs"]
+solo_config_base["aws"] = {"worker_subnets": instance_config["aws"]["worker_subnets"],
                     "worker_security_group": instance_config["aws"]["worker_security_group"]
                   }
-to_write["provisioner"] = instance_config["provisioner"]
-to_write["database"] = instance_config["database"]
-
-to_write_copy = copy.deepcopy(to_write)
-to_write_copy["run_list"] = run_list_step_2
-to_write = str(to_write).replace("\'", "\"").replace(": False", ": false").replace(": True", ": true")
-to_write_copy = str(to_write_copy).replace("\'", "\"").replace(": False", ": false").replace(": True", ": true")
-with open("solo_config_step_1.json", "w") as f:
-    f.write(to_write)
-with open("solo_config_step_2.json", "w") as f:
-    f.write(to_write_copy)
+solo_config_base["provisioner"] = instance_config["provisioner"]
+solo_config_base["database"] = instance_config["database"]
 
 
 # launch action
-if action == "launch":
+if options.action == "launch":
     # run chef-solo_step_1
-    command = "chef-solo -c solo.rb -j solo_config_step_1.json"
-    subprocess.call(command, shell=True)
+    run_list = main_config["instance_setup"]["chef"]["run_list_step_1"].split(",")
+    execute_chef_run_list(solo_config_base=solo_config_base, run_list=run_list)
 
     # create and attach the required volumes
     availability_zone = requests.get((aws_meta_url + "placement/availability-zone")).content
@@ -192,92 +169,56 @@ if action == "launch":
     subprocess.call(command, shell=True)
 
     # download and configure Galaxy
-    genomics_galaxy_version = instance_config["genomics_galaxy_version"]
-    if genomics_galaxy_version == "current_release":
-        genomics_galaxy_version = releases_config[main_config["current_release"]]["galaxy_repo_commit_hash"]
-    command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git /opt/galaxy; cd /opt/galaxy; git checkout {0}".format(genomics_galaxy_version)
-    subprocess.call(command, shell=True, preexec_fn=demote(pwd.getpwnam("galaxy").pw_uid, grp.getgrnam("galaxy").gr_gid))
-
+    download_galaxy(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
     # configure galaxy.ini
-    if instance_config["database"]["use_rds_postgresql_server"]:
-        database_connection = "postgresql://{0}:{1}@rds.ops.globusgenomics.org:5432/galaxy_{2}".format(creds_config.get("rds", "user"), creds_config.get("rds", "password"), node_name_short)
-    else:
-        database_connection = "postgres:///galaxy_{0}?user=galaxy&password=galaxy&host=/var/run/postgresql".foramt(node_name_short)
-    if "galaxy" in instance_config and "tool_data_path" in instance_config["galaxy"]:
-        tool_data_path = instance_config["galaxy"]["tool_data_path"]
-    else:
-        tool_data_path = "tool-data"
-    if "galaxy" in instance_config and "len_file_path" in instance_config["galaxy"]:
-        len_file_path = instance_config["galaxy"]["len_file_path"]
-    else:
-        len_file_path = "/mnt/galaxyIndices/galaxy/chrom"
-    if "galaxy" in instance_config and "admin_users" in instance_config["galaxy"]:
-        admin_users = main_config["galaxy"]["admin_users"] + "," + instance_config["galaxy"]["admin_users"]
-    else:
-        admin_users = main_config["galaxy"]["admin_users"]
-    config_info = {
-        "node_name_short": node_name_short,
-        "globus_group_id": instance_config["globus"]["globus_group_id"],
-        "database_connection": database_connection,
-        "tool_data_path": tool_data_path,
-        "len_file_path": len_file_path,
-        "admin_users": admin_users,
-        "id_secret": creds_config.get("galaxy", "id_secret")
-    }
-    template = open( 'files/galaxy.ini.template' )
-    src = Template( template.read() )
-    updated_content = src.safe_substitute(config_info)
-    with open("/opt/galaxy/config/galaxy.ini", "r") as f:
-        old_content = f.read()
-    if old_content != updated_content:
-        for text in difflib.unified_diff(old_content.split("\n"), updated_content.split("\n"), fromfile="galaxy.ini", tofile="updated galaxy.ini"):
-            print text
-        with open("/opt/galaxy/config/galaxy.ini", "w") as f:
-            f.write(updated_content)
-
+    configure_galaxy_ini(main_config=main_config, instance_config=instance_config, creds_config=creds_config, node_name_short=node_name_short)
     # configure job_conf.xml
-    updated_content = ""
-    worker_num_cpus = instance_config["provisioner"]["worker"]["worker_num_cpus"]
-    with open("/opt/galaxy/config/job_conf.xml", "r") as f:
-        old_content = f.read()
-    for line in old_content.split("\n"):
-        if ('destination="condor_remote_' in line) and \
-           (int(re.search('destination="condor_remote_(.*)"', line).group(1)) > int(worker_num_cpus)):
-            updated_line = worker_num_cpus.join(line.rsplit(re.search('destination="condor_remote_(.*)"', line).group(1), 1))
-            updated_content = updated_content + updated_line + "\n"
-        else:
-            updated_content = updated_content + line + "\n"
-    if updated_content.endswith("\n"):
-        updated_content = updated_content[:-1]
-    if old_content != updated_content:
-        for text in difflib.unified_diff(old_content.split("\n"), updated_content.split("\n"), fromfile="job_conf.xml", tofile="updated job_conf.xml"):
-            print text
-        with open("/opt/galaxy/config/job_conf.xml", "w") as f:
-            f.write(updated_content)
-
+    configure_galaxy_job_conf(instance_config=instance_config)
     # configure tool_conf.xml
-    updated_content = filter_tool_conf(node_name_short, "/opt/galaxy/config/tool_conf.xml")
-    with open("/opt/galaxy/config/tool_conf.xml", "r") as f:
-        old_content = f.read()
-    if old_content != updated_content:
-        for text in difflib.unified_diff(old_content.split("\n"), updated_content.split("\n"), fromfile="tool_conf.xml", tofile="updated tool_conf.xml"):
-            print text
-        with open("/opt/galaxy/config/tool_conf.xml", "w") as f:
-            f.write(updated_content)
+    configure_galaxy_tool_conf(node_name_short=node_name_short)
 
     # run chef-solo_step_2
-    command = "chef-solo -c solo.rb -j solo_config_step_2.json"
-    subprocess.call(command, shell=True)
+    run_list = main_config["instance_setup"]["chef"]["run_list_step_2"].split(",")
+    execute_chef_run_list(solo_config_base=solo_config_base, run_list=run_list)
 
 # update action
-if action == "update":
-    if update_type == "chef-solo_step_2":
+if options.action == "update":
+    if options.update_type == None:
+        sys.exit("Please specify --update-type")
+    elif options.update_type == "chef-solo_step_2":
         # run chef-solo_step_2
-        command = "chef-solo -c solo.rb -j solo_config_step_2.json"
-        subprocess.call(command, shell=True)
-    elif update_type == "chef-solo_step_1":
+        run_list = main_config["instance_setup"]["chef"]["run_list_step_2"].split(",")
+        execute_chef_run_list(solo_config_base=solo_config_base, run_list=run_list)
+    elif options.update_type == "chef-solo_step_1":
         # run chef-solo_step_1
-        command = "chef-solo -c solo.rb -j solo_config_step_1.json"
+        run_list = main_config["instance_setup"]["chef"]["run_list_step_1"].split(",")
+        execute_chef_run_list(solo_config_base=solo_config_base, run_list=run_list)
+    elif options.update_type == "galaxy":
+        command = "supervisorctl stop galaxy:"
+        subprocess.call(command, shell=True)
+        if options.backup_galaxy:
+            print "backup galaxy..."
+            mv_and_backup_galaxy()
+        else:
+            print "remove /opt/galaxy..."
+            command = "rm -r /opt/galaxy"
+            subprocess.call(command, shell=True)
+        if not os.path.exists("/opt/galaxy"):
+            os.makedirs("/opt/galaxy")
+            uid = pwd.getpwnam("galaxy").pw_uid
+            gid = grp.getgrnam("galaxy").gr_gid
+            os.chown("/opt/galaxy", uid, gid)
+        # download and configure Galaxy
+        download_galaxy(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
+        # configure galaxy.ini
+        configure_galaxy_ini(main_config=main_config, instance_config=instance_config, creds_config=creds_config, node_name_short=node_name_short)
+        # configure job_conf.xml
+        configure_galaxy_job_conf(instance_config=instance_config)
+        # configure tool_conf.xml
+        configure_galaxy_tool_conf(node_name_short=node_name_short)
+        # run _galaxy recipe
+        execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy]"])
+        command = "supervisorctl start galaxy:"
         subprocess.call(command, shell=True)
     else:
         sys.exit("update type not supported.")

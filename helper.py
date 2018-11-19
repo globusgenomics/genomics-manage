@@ -6,6 +6,10 @@ import re
 import os
 import pwd
 import grp
+import copy
+from string import Template
+import difflib
+import datetime
 
 def create_ec2_volume(region=None,
                       AvailabilityZone=None, 
@@ -234,6 +238,20 @@ def filter_tool_conf(headnode, config_file):
     return result
 
 
+def execute_chef_run_list(solo_config_base=None, run_list=None):
+    """
+    accept solo config dict and run_list list to run
+    """
+    run_list = map(str.strip, run_list)
+    to_write_copy = copy.deepcopy(solo_config_base)
+    to_write_copy["run_list"] = run_list
+    to_write_copy = str(to_write_copy).replace("\'", "\"").replace(": False", ": false").replace(": True", ": true")
+    with open("solo_config.json", "w") as f:
+        f.write(to_write_copy)
+    command = "chef-solo -c solo.rb -j solo_config.json"
+    subprocess.call(command, shell=True)
+
+
 def demote(user_uid, user_gid):
     """Pass the function 'set_ids' to preexec_fn, rather than just calling
     setuid and setgid. This will change the ids for that subprocess only"""
@@ -243,3 +261,90 @@ def demote(user_uid, user_gid):
         os.setuid(user_uid)
 
     return set_ids
+
+
+def download_galaxy(main_config=None, instance_config=None, releases_config=None):
+    genomics_galaxy_version = instance_config["genomics_galaxy_version"]
+    if genomics_galaxy_version == "current_release":
+        genomics_galaxy_version = releases_config[main_config["current_release"]]["galaxy_repo_commit_hash"]
+    command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git /opt/galaxy; cd /opt/galaxy; git checkout {0}".format(genomics_galaxy_version)
+    subprocess.call(command, shell=True, preexec_fn=demote(pwd.getpwnam("galaxy").pw_uid, grp.getgrnam("galaxy").gr_gid))
+
+
+def configure_galaxy_ini(main_config=None, instance_config=None, creds_config=None, node_name_short=None):
+    # configure galaxy.ini
+    if instance_config["database"]["use_rds_postgresql_server"]:
+        database_connection = "postgresql://{0}:{1}@rds.ops.globusgenomics.org:5432/galaxy_{2}".format(creds_config.get("rds", "user"), creds_config.get("rds", "password"), node_name_short)
+    else:
+        database_connection = "postgres:///galaxy_{0}?user=galaxy&password=galaxy&host=/var/run/postgresql".foramt(node_name_short)
+    if "galaxy" in instance_config and "tool_data_path" in instance_config["galaxy"]:
+        tool_data_path = instance_config["galaxy"]["tool_data_path"]
+    else:
+        tool_data_path = "tool-data"
+    if "galaxy" in instance_config and "len_file_path" in instance_config["galaxy"]:
+        len_file_path = instance_config["galaxy"]["len_file_path"]
+    else:
+        len_file_path = "/mnt/galaxyIndices/galaxy/chrom"
+    if "galaxy" in instance_config and "admin_users" in instance_config["galaxy"]:
+        admin_users = main_config["galaxy"]["admin_users"] + "," + instance_config["galaxy"]["admin_users"]
+    else:
+        admin_users = main_config["galaxy"]["admin_users"]
+    config_info = {
+        "node_name_short": node_name_short,
+        "globus_group_id": instance_config["globus"]["globus_group_id"],
+        "database_connection": database_connection,
+        "tool_data_path": tool_data_path,
+        "len_file_path": len_file_path,
+        "admin_users": admin_users,
+        "id_secret": creds_config.get("galaxy", "id_secret")
+    }
+    template = open( 'files/galaxy.ini.template' )
+    src = Template( template.read() )
+    updated_content = src.safe_substitute(config_info)
+    with open("/opt/galaxy/config/galaxy.ini", "r") as f:
+        old_content = f.read()
+    if old_content != updated_content:
+        for text in difflib.unified_diff(old_content.split("\n"), updated_content.split("\n"), fromfile="galaxy.ini", tofile="updated galaxy.ini"):
+            print text
+        with open("/opt/galaxy/config/galaxy.ini", "w") as f:
+            f.write(updated_content)
+
+
+def configure_galaxy_job_conf(instance_config=None):
+    # configure job_conf.xml
+    updated_content = ""
+    worker_num_cpus = instance_config["provisioner"]["worker"]["worker_num_cpus"]
+    with open("/opt/galaxy/config/job_conf.xml", "r") as f:
+        old_content = f.read()
+    for line in old_content.split("\n"):
+        if ('destination="condor_remote_' in line) and \
+           (int(re.search('destination="condor_remote_(.*)"', line).group(1)) > int(worker_num_cpus)):
+            updated_line = worker_num_cpus.join(line.rsplit(re.search('destination="condor_remote_(.*)"', line).group(1), 1))
+            updated_content = updated_content + updated_line + "\n"
+        else:
+            updated_content = updated_content + line + "\n"
+    if updated_content.endswith("\n"):
+        updated_content = updated_content[:-1]
+    if old_content != updated_content:
+        for text in difflib.unified_diff(old_content.split("\n"), updated_content.split("\n"), fromfile="job_conf.xml", tofile="updated job_conf.xml"):
+            print text
+        with open("/opt/galaxy/config/job_conf.xml", "w") as f:
+            f.write(updated_content)
+
+
+def configure_galaxy_tool_conf(node_name_short=None):
+    # configure tool_conf.xml
+    updated_content = filter_tool_conf(node_name_short, "/opt/galaxy/config/tool_conf.xml")
+    with open("/opt/galaxy/config/tool_conf.xml", "r") as f:
+        old_content = f.read()
+    if old_content != updated_content:
+        for text in difflib.unified_diff(old_content.split("\n"), updated_content.split("\n"), fromfile="tool_conf.xml", tofile="updated tool_conf.xml"):
+            print text
+        with open("/opt/galaxy/config/tool_conf.xml", "w") as f:
+            f.write(updated_content)
+
+def mv_and_backup_galaxy():
+    if not os.path.exists("/scratch/backup"):
+        os.makedirs("/scratch/backup")
+    command = "mv /opt/galaxy /scratch/backup/galaxy-{0}".format(datetime.datetime.today().strftime('%Y%m%d'))
+    subprocess.call(command, shell=True)

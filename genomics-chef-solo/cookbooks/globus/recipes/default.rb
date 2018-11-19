@@ -28,7 +28,7 @@ cookbook_file "/home/galaxy/.globusgenomics/globus_creds" do
   mode      0400
 end
 
-cookbook_file "/home/galaxy/.globusgenomics/globus_user_granted" do
+cookbook_file "/home/galaxy/.globusgenomics/globus_user_granted_0" do
   action    :create_if_missing
   source    "globus_user_granted"
   owner     "galaxy"
