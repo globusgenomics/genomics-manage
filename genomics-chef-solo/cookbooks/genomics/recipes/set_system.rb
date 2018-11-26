@@ -18,3 +18,21 @@ node.normal['system']['packages']['install'] = [
 
 include_recipe "system::default"
 include_recipe "apt::default"
+
+# set Amazon Time Sync Service 
+package "chrony" do
+  action  :install
+end
+
+cookbook_file "/etc/chrony/chrony.conf" do
+  source    "chrony.conf"
+  owner     "root"
+  group     "root"
+  mode      0644
+end
+
+execute "chrony _restart" do
+ command    "/etc/init.d/chrony restart"
+ action     :nothing
+ subscribes :run, "cookbook_file[/etc/chrony/chrony.conf]", :immediately
+end

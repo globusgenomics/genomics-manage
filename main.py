@@ -18,6 +18,7 @@ Example commands:
 python main.py --action launch --instance test1.globusgenomics.org
 python main.py --action update --instance test1.globusgenomics.org --update-type chef-solo_step_2
 python main.py --action update --instance test1.globusgenomics.org --update-type chef-solo_step_1
+python main.py --action update --instance test1.globusgenomics.org --update-type galaxy
 python main.py --action update --instance test1.globusgenomics.org --update-type galaxy --backup-galaxy
 """
 
