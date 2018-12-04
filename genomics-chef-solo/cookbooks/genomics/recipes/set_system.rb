@@ -31,7 +31,7 @@ cookbook_file "/etc/chrony/chrony.conf" do
   mode      0644
 end
 
-execute "chrony _restart" do
+execute "chrony_restart" do
  command    "/etc/init.d/chrony restart"
  action     :nothing
  subscribes :run, "cookbook_file[/etc/chrony/chrony.conf]", :immediately
