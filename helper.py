@@ -265,9 +265,13 @@ def demote(user_uid, user_gid):
 
 def download_galaxy(main_config=None, instance_config=None, releases_config=None):
     genomics_galaxy_version = instance_config["genomics_galaxy_version"]
-    if genomics_galaxy_version == "current_release":
-        genomics_galaxy_version = releases_config[main_config["current_release"]]["galaxy_repo_commit_hash"]
-    command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git /opt/galaxy; cd /opt/galaxy; git checkout {0}".format(genomics_galaxy_version)
+    if genomics_galaxy_version.startswith("branch/"):
+        branch_name = genomics_galaxy_version.split("/")[1].strip()
+        command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git --branch {0} --single-branch /opt/galaxy".format(branch_name)
+    else:
+        if genomics_galaxy_version == "current_release":
+            genomics_galaxy_version = releases_config[main_config["current_release"]]["galaxy_repo_commit_hash"]
+        command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git /opt/galaxy; cd /opt/galaxy; git checkout {0}".format(genomics_galaxy_version)
     subprocess.call(command, shell=True, preexec_fn=demote(pwd.getpwnam("galaxy").pw_uid, grp.getgrnam("galaxy").gr_gid))
 
 

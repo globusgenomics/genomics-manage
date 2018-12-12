@@ -1,6 +1,6 @@
 {
     "name": "test1.globusgenomics.org",
-    "genomics_galaxy_version": "current_release",
+    "genomics_galaxy_version": "branch/eupathdb_dev",
     "volumes": {
         "scratch_volume": {
             "size": 100,

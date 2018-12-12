@@ -34,7 +34,7 @@ Create config for an instance:
 {
     # instance name
     "name": "test1.globusgenomics.org",
-    # galaxy commit id or use current release at main.config which picks a release from releases.config
+    # galaxy commit id or use current release at main.config which picks a release from releases.config, if in the form of branch/branch_name, it will download the branch instead, this is useful for the dev instances
     "genomics_galaxy_version": "current_release",
     # volumes to attach to the instance
     "volumes": {
