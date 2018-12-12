@@ -20,6 +20,7 @@ python main.py --action update --instance test1.globusgenomics.org --update-type
 python main.py --action update --instance test1.globusgenomics.org --update-type chef-solo_step_1
 python main.py --action update --instance test1.globusgenomics.org --update-type galaxy
 python main.py --action update --instance test1.globusgenomics.org --update-type galaxy --backup-galaxy
+python main.py --action update --instance test1.globusgenomics.org --update-type galaxy-reports
 """
 
 parser.add_option("--action", dest="action", help="launch, config, update")
@@ -28,6 +29,8 @@ parser.add_option("--update-type", dest="update_type", help="update type")
 parser.add_option("--backup-galaxy", dest="backup_galaxy", help="backup old galaxy when update galaxy", action="store_true", default=False)
 
 options, args = parser.parse_args(args)
+
+print "#### Working on {0}".format(options.instance)
 
 # check the inputs
 if options.action not in ["launch", "update"]:
@@ -221,6 +224,9 @@ if options.action == "update":
         execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy]"])
         command = "supervisorctl start galaxy:"
         subprocess.call(command, shell=True)
+    elif options.update_type =="galaxy-reports":
+        # start galaxy-reports
+        execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy_reports]"])
     else:
         sys.exit("update type not supported.")
 

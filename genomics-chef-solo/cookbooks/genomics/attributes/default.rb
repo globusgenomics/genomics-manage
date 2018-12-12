@@ -29,5 +29,6 @@ default['genomics']['logdir'] = '/var/log/genomics/'
 default['genomics']['galaxy']['logfile'] = ::File.join(node['genomics']['logdir'], 'galaxy.log')
 default['genomics']['provisioner']['logfile'] = ::File.join(node['genomics']['logdir'], 'provision.log')
 default['genomics']['provisioner']['error_logfile'] = ::File.join(node['genomics']['logdir'], 'provision.error.log')
+default['genomics']['galaxy']['reports']['logfile'] = ::File.join(node['genomics']['logdir'], "galaxy-reports.log")
 
 default['genomics']['globus_sharing_endpoint']['shared_dir'] = '/scratch/shared'

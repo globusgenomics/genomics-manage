@@ -28,6 +28,7 @@ define host {
   hostgroups all,genomics_server,linux,production
 }
 ```
+- Optional: add galaxy-reports service, e.g. python main.py --action update --instance test1.globusgenomics.org --update-type galaxy-reports
 
 Create config for an instance:
 ```

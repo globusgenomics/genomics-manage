@@ -1,0 +1,15 @@
+{
+  "id": "rds_postgresql_user",
+  "username": {
+    "encrypted_data": "z/puiiZJcf61gFlujx8lND723O2FiVX38nL1UdNZhc0=\n",
+    "iv": "w2hrISgLCRq+cZ4CZThoFw==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  },
+  "passwd": {
+    "encrypted_data": "IvC2Cogt/r6nYwloI1pkTrzQ6d05Q53HQdSZBMRSSCiTvvAWFKqHxYuc7DNu\nxRYi\n",
+    "iv": "mBdaEcWCYJ8HUDXV8Rz38g==\n",
+    "version": 1,
+    "cipher": "aes-256-cbc"
+  }
+}
