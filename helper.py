@@ -10,6 +10,7 @@ import copy
 from string import Template
 import difflib
 import datetime
+import fileinput
 
 def create_ec2_volume(region=None,
                       AvailabilityZone=None, 
@@ -295,12 +296,14 @@ def configure_galaxy_ini(main_config=None, instance_config=None, creds_config=No
         admin_users = main_config["galaxy"]["admin_users"]
     config_info = {
         "node_name_short": node_name_short,
+        "globus_use_group": instance_config["globus"]["globus_use_group"],
         "globus_group_id": instance_config["globus"]["globus_group_id"],
         "database_connection": database_connection,
         "tool_data_path": tool_data_path,
         "len_file_path": len_file_path,
         "admin_users": admin_users,
-        "id_secret": creds_config.get("galaxy", "id_secret")
+        "id_secret": creds_config.get("galaxy", "id_secret"),
+        "welcome_url": instance_config["galaxy"]["welcome_url"]
     }
     template = open( 'files/galaxy.ini.template' )
     src = Template( template.read() )
@@ -352,3 +355,24 @@ def mv_and_backup_galaxy():
         os.makedirs("/scratch/backup")
     command = "mv /opt/galaxy /scratch/backup/galaxy-{0}".format(datetime.datetime.today().strftime('%Y%m%d'))
     subprocess.call(command, shell=True)
+
+def replaceAll(file,searchExp,replaceExp):
+    for line in fileinput.input(file, inplace=1):
+        if searchExp in line:
+            line = line.replace(searchExp,replaceExp)
+        sys.stdout.write(line)
+
+def update_gg_version_in_welcome_page(main_config=None, instance_config=None):
+    genomics_galaxy_version = instance_config["genomics_galaxy_version"]
+    if genomics_galaxy_version.startswith("branch/"):
+        gg_version = genomics_galaxy_version.split("/")[1].strip()
+    elif genomics_galaxy_version == "current_release":
+        gg_version = main_config["current_release"]
+    else:
+        gg_version = "Commit: {0}".format(genomics_galaxy_version)
+
+    welcome_page = "/opt/galaxy" + instance_config["galaxy"]["welcome_url"]
+    updated_content = '<td class="logo_table_row">{0}</td>'.format(gg_version)
+    replaceAll(welcome_page, '<td class="logo_table_row"></td>', updated_content)
+
+

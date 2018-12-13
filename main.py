@@ -21,6 +21,7 @@ python main.py --action update --instance test1.globusgenomics.org --update-type
 python main.py --action update --instance test1.globusgenomics.org --update-type galaxy
 python main.py --action update --instance test1.globusgenomics.org --update-type galaxy --backup-galaxy
 python main.py --action update --instance test1.globusgenomics.org --update-type galaxy-reports
+python main.py --action test-function --instance test1.globusgenomics.org
 """
 
 parser.add_option("--action", dest="action", help="launch, config, update")
@@ -33,7 +34,7 @@ options, args = parser.parse_args(args)
 print "#### Working on {0}".format(options.instance)
 
 # check the inputs
-if options.action not in ["launch", "update"]:
+if options.action not in ["launch", "update", "test-function"]:
     sys.exit("invalid action")
 assert options.instance != None
 
@@ -180,6 +181,8 @@ if options.action == "launch":
     configure_galaxy_job_conf(instance_config=instance_config)
     # configure tool_conf.xml
     configure_galaxy_tool_conf(node_name_short=node_name_short)
+    # update gg version num
+    update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config)
 
     # run chef-solo_step_2
     run_list = main_config["instance_setup"]["chef"]["run_list_step_2"].split(",")
@@ -220,6 +223,8 @@ if options.action == "update":
         configure_galaxy_job_conf(instance_config=instance_config)
         # configure tool_conf.xml
         configure_galaxy_tool_conf(node_name_short=node_name_short)
+        # update gg version num
+        update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config)
         # run _galaxy recipe
         execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy]"])
         command = "supervisorctl start galaxy:"
@@ -230,5 +235,6 @@ if options.action == "update":
     else:
         sys.exit("update type not supported.")
 
-
-
+# test-function action
+if options.action == "test-function":
+    update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config)

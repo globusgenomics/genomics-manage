@@ -1,6 +1,6 @@
 {
     "name": "test1.globusgenomics.org",
-    "genomics_galaxy_version": "branch/eupathdb_dev",
+    "genomics_galaxy_version": "current_release",
     "volumes": {
         "scratch_volume": {
             "size": 100,
@@ -44,12 +44,14 @@
         "use_rds_postgresql_server": True
     },
     "globus": {
+        "globus_use_group": True,
         "globus_group_id": "920e3148-a6d3-11e2-8266-12313809f035"
     },
     "galaxy": {
         "tool_data_path": "tool-data",
         "len_file_path": "/mnt/galaxyIndices/galaxy/chrom",
-        "admin_users": "test@test.org"
+        "admin_users": "test@test.org",
+        "welcome_url": "/static/welcome.html"
     },
     "aws": {
         "kms_key_id": "6272cd5d-362f-4b8d-8593-7f165d239c49",

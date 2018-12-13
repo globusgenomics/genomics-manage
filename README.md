@@ -94,6 +94,8 @@ Create config for an instance:
         "use_rds_postgresql_server": True
     },
     "globus": {
+        # use globus globus to restrict access
+        "globus_use_group": True,
         # globus group used for login
         "globus_group_id": "920e3148-a6d3-11e2-8266-12313809f035"
     },
@@ -102,7 +104,9 @@ Create config for an instance:
         "tool_data_path": "tool-data",
         "len_file_path": "/mnt/galaxyIndices/galaxy/chrom",
         # extra admin users, seperate by ,
-        "admin_users": "test@test.org"
+        "admin_users": "test@test.org",
+        # choose which welcome page
+        "welcome_url": "/static/welcome.html"
     },
     "aws": {
         # the kms key used to encrypt volumes

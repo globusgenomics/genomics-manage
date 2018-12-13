@@ -71,6 +71,8 @@ prefix = /galaxy
 # Globus Genomics
 globus_endpoint = galaxy#$node_name_short
 globus_use_oauth = True
+# use globus group to restrict access
+globus_use_group = $globus_use_group
 globus_group_id = $globus_group_id
 globus_dir = /home/galaxy/.globusgenomics
 globus_cred_file = /home/galaxy/.globusgenomics/globus_creds
@@ -623,7 +625,7 @@ nglims_config_file = tool-data/nglims.yaml
 
 # The URL of the page to display in Galaxy's middle pane when loaded.  This can
 # be an absolute or relative URL.
-#welcome_url = /static/welcome.html
+welcome_url = $welcome_url
 
 # The URL linked by the "Galaxy/brand" text.
 #logo_url = /
