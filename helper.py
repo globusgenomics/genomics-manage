@@ -374,5 +374,8 @@ def update_gg_version_in_welcome_page(main_config=None, instance_config=None):
     welcome_page = "/opt/galaxy" + instance_config["galaxy"]["welcome_url"]
     updated_content = '<td class="logo_table_row">{0}</td>'.format(gg_version)
     replaceAll(welcome_page, '<td class="logo_table_row"></td>', updated_content)
+    uid = pwd.getpwnam("galaxy").pw_uid
+    gid = grp.getgrnam("galaxy").gr_gid
+    os.chown(welcome_page, uid, gid)
 
 
