@@ -265,14 +265,9 @@ def demote(user_uid, user_gid):
 
 
 def download_galaxy(main_config=None, instance_config=None, releases_config=None):
-    genomics_galaxy_version = instance_config["genomics_galaxy_version"]
-    if genomics_galaxy_version.startswith("branch/"):
-        branch_name = genomics_galaxy_version.split("/")[1].strip()
-        command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git --branch {0} --single-branch /opt/galaxy".format(branch_name)
-    else:
-        if genomics_galaxy_version == "current_release":
-            genomics_galaxy_version = releases_config[main_config["current_release"]]["galaxy_repo_commit_hash"]
-        command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git /opt/galaxy; cd /opt/galaxy; git checkout {0}".format(genomics_galaxy_version)
+    # hash based command: command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git /opt/galaxy; cd /opt/galaxy; git checkout {0}".format(genomics_galaxy_version)
+    branch_name = get_gg_branch(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
+    command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git --branch {0} --single-branch /opt/galaxy".format(branch_name)
     subprocess.call(command, shell=True, preexec_fn=demote(pwd.getpwnam("galaxy").pw_uid, grp.getgrnam("galaxy").gr_gid))
 
 
@@ -362,20 +357,19 @@ def replaceAll(file,searchExp,replaceExp):
             line = line.replace(searchExp,replaceExp)
         sys.stdout.write(line)
 
-def update_gg_version_in_welcome_page(main_config=None, instance_config=None):
-    genomics_galaxy_version = instance_config["genomics_galaxy_version"]
-    if genomics_galaxy_version.startswith("branch/"):
-        gg_version = genomics_galaxy_version.split("/")[1].strip()
-    elif genomics_galaxy_version == "current_release":
-        gg_version = main_config["current_release"]
-    else:
-        gg_version = "Commit: {0}".format(genomics_galaxy_version)
-
+def update_gg_version_in_welcome_page(main_config=None, instance_config=None, releases_config=None):
+    branch_name = get_gg_branch(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
     welcome_page = "/opt/galaxy" + instance_config["galaxy"]["welcome_url"]
-    updated_content = '<td class="logo_table_row">{0}</td>'.format(gg_version)
+    updated_content = '<td class="logo_table_row">{0}</td>'.format(branch_name)
     replaceAll(welcome_page, '<td class="logo_table_row"></td>', updated_content)
     uid = pwd.getpwnam("galaxy").pw_uid
     gid = grp.getgrnam("galaxy").gr_gid
     os.chown(welcome_page, uid, gid)
+
+def get_gg_branch(main_config=None, instance_config=None, releases_config=None):
+    genomics_galaxy_branch = instance_config["genomics_galaxy_version"]
+    if genomics_galaxy_branch == "current_release":
+        genomics_galaxy_branch = releases_config[main_config["current_release"]]["galaxy_repo_branch"]
+    return genomics_galaxy_branch
 
 

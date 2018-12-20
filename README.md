@@ -18,7 +18,7 @@ Steps to launch an instance:
 - Check RDS if using RDS, that is make sure the database is available on RDS for this instance; Make sure the Globus Endpoint is not in use
 - Run main.py as root to configure the instance, e.g. python main.py --action launch --instance test1.globusgenomics.org
 - Setup globus creds at /home/galaxy/.globusgenomics
-- Add it to Nagios monitoring: ssh to nagios.ops.globusgenomics.org, edit /etc/nagios3/conf.d/hosts.cfg and add the following, then sudo service nagios3 reload
+- Optional: Add it to Nagios monitoring: ssh to nagios.ops.globusgenomics.org, edit /etc/nagios3/conf.d/hosts.cfg and add the following, then sudo service nagios3 reload
 ```
 define host {
   use server
@@ -35,7 +35,7 @@ Create config for an instance:
 {
     # instance name
     "name": "test1.globusgenomics.org",
-    # galaxy commit id or use current release at main.config which picks a release from releases.config, if in the form of branch/branch_name, it will download the branch instead, this is useful for the dev instances
+    # branch name or use current release at main.config which picks a release from releases.config
     "genomics_galaxy_version": "current_release",
     # volumes to attach to the instance
     "volumes": {
@@ -94,7 +94,7 @@ Create config for an instance:
         "use_rds_postgresql_server": True
     },
     "globus": {
-        # use globus globus to restrict access
+        # use globus group to restrict access
         "globus_use_group": True,
         # globus group used for login
         "globus_group_id": "920e3148-a6d3-11e2-8266-12313809f035"

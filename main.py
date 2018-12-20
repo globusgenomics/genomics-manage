@@ -182,7 +182,7 @@ if options.action == "launch":
     # configure tool_conf.xml
     configure_galaxy_tool_conf(node_name_short=node_name_short)
     # update gg version num
-    update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config)
+    update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
 
     # run chef-solo_step_2
     run_list = main_config["instance_setup"]["chef"]["run_list_step_2"].split(",")
@@ -224,7 +224,7 @@ if options.action == "update":
         # configure tool_conf.xml
         configure_galaxy_tool_conf(node_name_short=node_name_short)
         # update gg version num
-        update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config)
+        update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
         # run _galaxy recipe
         execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy]"])
         command = "supervisorctl start galaxy:"
@@ -237,4 +237,4 @@ if options.action == "update":
 
 # test-function action
 if options.action == "test-function":
-    update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config)
+    update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config, releases_config=releases_config)

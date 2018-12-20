@@ -68,7 +68,7 @@ bash 'add Globus endpoint' do
   user 'root'
   code <<-EOH
   globus-connect-server-setup
-  echo "!!!Please update the endpoint through Globus CLI (globus endpoint update ENDPOINT_ID --display-name galaxy#NAME --managed --myproxy-server myproxy.globusonline.org)"
+  echo "!!!Please update the endpoint through Globus CLI (globus endpoint update ENDPOINT_ID --display-name galaxy##{ep_name} --managed --myproxy-server myproxy.globusonline.org)"
   sleep 2m
   EOH
   subscribes :run, "template[#{node['globus']['config_file']}]", :immediately
