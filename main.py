@@ -227,6 +227,8 @@ if options.action == "update":
         update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
         # run _galaxy recipe
         execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy]"])
+        # start galaxy-reports
+        execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy_reports]"])
         command = "supervisorctl start galaxy:"
         subprocess.call(command, shell=True)
     elif options.update_type =="galaxy-reports":

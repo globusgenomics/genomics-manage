@@ -266,8 +266,8 @@ def demote(user_uid, user_gid):
 
 def download_galaxy(main_config=None, instance_config=None, releases_config=None):
     # hash based command: command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git /opt/galaxy; cd /opt/galaxy; git checkout {0}".format(genomics_galaxy_version)
-    branch_name = get_gg_branch(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
-    command = "git clone https://github.com/globusgenomics/genomics-galaxy-dev.git --branch {0} --single-branch /opt/galaxy".format(branch_name)
+    repo, branch_name = get_gg_repo_and_branch(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
+    command = "git clone {0} --branch {1} --single-branch /opt/galaxy".format(repo, branch_name)
     subprocess.call(command, shell=True, preexec_fn=demote(pwd.getpwnam("galaxy").pw_uid, grp.getgrnam("galaxy").gr_gid))
 
 
@@ -358,7 +358,7 @@ def replaceAll(file,searchExp,replaceExp):
         sys.stdout.write(line)
 
 def update_gg_version_in_welcome_page(main_config=None, instance_config=None, releases_config=None):
-    branch_name = get_gg_branch(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
+    branch_name = get_gg_repo_and_branch(main_config=main_config, instance_config=instance_config, releases_config=releases_config)[1]
     welcome_page = "/opt/galaxy" + instance_config["galaxy"]["welcome_url"]
     updated_content = '<td class="logo_table_row">{0}</td>'.format(branch_name)
     replaceAll(welcome_page, '<td class="logo_table_row"></td>', updated_content)
@@ -366,10 +366,16 @@ def update_gg_version_in_welcome_page(main_config=None, instance_config=None, re
     gid = grp.getgrnam("galaxy").gr_gid
     os.chown(welcome_page, uid, gid)
 
-def get_gg_branch(main_config=None, instance_config=None, releases_config=None):
+def get_gg_repo_and_branch(main_config=None, instance_config=None, releases_config=None):
     genomics_galaxy_branch = instance_config["genomics_galaxy_version"]
-    if genomics_galaxy_branch == "current_release":
-        genomics_galaxy_branch = releases_config[main_config["current_release"]]["galaxy_repo_branch"]
-    return genomics_galaxy_branch
+    if "##" in genomics_galaxy_branch:
+        tmp = genomics_galaxy_branch.split("##")
+        genomics_galaxy_repo = tmp[0].strip()
+        genomics_galaxy_branch = tmp[1].strip()
+    else:
+        if genomics_galaxy_branch == "current_release":
+            genomics_galaxy_branch = releases_config[main_config["current_release"]]["galaxy_repo_branch"]
+        genomics_galaxy_repo = "https://github.com/globusgenomics/genomics-galaxy-dev.git"
+    return (genomics_galaxy_repo, genomics_galaxy_branch)
 
 

@@ -22,7 +22,6 @@ node.set['postfix']['main']['mydestination'] = "$myhostname, $myhostname.$mydoma
 # node.set['postfix']['main']['myorigin'] = '$myhostname.$mydomain'
 node.set['postfix']['main']['myorigin'] = node['fqdn'] || node['hostname']
 node.set['postfix']['main']['relayhost'] = 'smtp.globusgenomics.org'
-node.set['postfix']['main']['use_alias_maps'] = 'yes'
 node.set['postfix']['main']['smtp_use_tls'] = 'no'
 node.set['postfix']['main']['smtp_tls_security_level'] = 'encrypt'
 node.set['postfix']['main']['smtp_sasl_auth_enable'] = 'yes'

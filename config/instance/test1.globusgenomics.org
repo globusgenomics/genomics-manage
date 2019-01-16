@@ -1,6 +1,6 @@
 {
     "name": "test1.globusgenomics.org",
-    "genomics_galaxy_version": "current_release",
+    "genomics_galaxy_version": "dev",
     "volumes": {
         "scratch_volume": {
             "size": 100,

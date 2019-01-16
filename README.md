@@ -15,7 +15,7 @@ Steps to launch an instance:
     - git clone https://github.com/globusgenomics/genomics-manage.git
     - upload secret to the secret directory
 - Install the prerequisites as root: sh setup.sh
-- Check RDS if using RDS, that is make sure the database is available on RDS for this instance; Make sure the Globus Endpoint is not in use
+- Update tool_conf.xml on galaxy repo if necessary; Check RDS if using RDS, that is make sure the database is available on RDS for this instance; Make sure the Globus Endpoint is not in use
 - Run main.py as root to configure the instance, e.g. python main.py --action launch --instance test1.globusgenomics.org
 - Setup globus creds at /home/galaxy/.globusgenomics
 - Optional: Add it to Nagios monitoring: ssh to nagios.ops.globusgenomics.org, edit /etc/nagios3/conf.d/hosts.cfg and add the following, then sudo service nagios3 reload
@@ -35,7 +35,7 @@ Create config for an instance:
 {
     # instance name
     "name": "test1.globusgenomics.org",
-    # branch name or use current release at main.config which picks a release from releases.config
+    # branch name or use current release at main.config which picks a release from releases.config, if you want to use a different repo, specify "repo##branch", such as "https://github.com/globusgenomics/genomics-galaxy-dev.git##dev"
     "genomics_galaxy_version": "current_release",
     # volumes to attach to the instance
     "volumes": {
