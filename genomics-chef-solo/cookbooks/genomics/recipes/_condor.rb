@@ -20,17 +20,17 @@
 #include_recipe "genomics::_user_setup"
 
 # We cannot use apt_repository because it adds 'deb-src' that is not provided by the repo.
-file "/etc/apt/sources.list.d/condor.list" do
-  action    :create_if_missing
-  mode      0644
-  content   "deb [arch=amd64] http://www.cs.wisc.edu/condor/debian/stable/ wheezy contrib"
-  notifies  :run, "execute[apt-get update]", :immediately
-end
+#file "/etc/apt/sources.list.d/condor.list" do
+#  action    :create_if_missing
+#  mode      0644
+#  content   "deb [arch=amd64] http://www.cs.wisc.edu/condor/debian/stable/ wheezy contrib"
+#  notifies  :run, "execute[apt-get update]", :immediately
+#end
 
-package "condor" do
-  options "--force-yes"
-  action :install
-end
+#package "condor" do
+#  options "--force-yes"
+#  action :install
+#end
 
 # create the condor service so that it can be notified
 service "condor" do

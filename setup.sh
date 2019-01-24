@@ -1,4 +1,8 @@
+#install condor
+wget -qO - https://research.cs.wisc.edu/htcondor/ubuntu/HTCondor-Release.gpg.key | sudo apt-key add -
+echo "deb http://research.cs.wisc.edu/htcondor/ubuntu/stable/ trusty contrib" >> /etc/apt/sources.list
 apt-get update
+apt-get install -y condor
 dpkg -i genomics-chef-solo/chefdk_1.5.0-1_amd64.deb
 apt-get install -y git
 apt-get install -y nfs-kernel-server
