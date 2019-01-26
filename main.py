@@ -239,4 +239,4 @@ if options.action == "update":
 
 # test-function action
 if options.action == "test-function":
-    update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
+    configure_galaxy_ini(main_config=main_config, instance_config=instance_config, creds_config=creds_config, node_name_short=node_name_short)

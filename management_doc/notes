@@ -1,0 +1,7 @@
+[support mail system]
+user send email directly:
+USER => support@globusgenomics.org = redirect => support@globusgenomics.zendesk.com = reply to => USER
+user send email through Gnomics Galaxy:
+server@globusgenomics => CC USER and send to support@globusgenomics.org ...
+how the team is notified:
+support@globusgenomics.org (from zendesk) => globusgenomics-support@lists.uchicago.edu => team members => team member login to zendesk and work on the ticket

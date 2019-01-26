@@ -468,13 +468,15 @@ cluster_files_directory = /scratch/galaxy/job_logs
 # define here (host:port).
 # Galaxy will automatically try STARTTLS but will continue upon failure.
 #smtp_server = None
-smtp_server = localhost
+smtp_server = $smtp_server
 
 # If your SMTP server requires a username and password, you can provide them
 # here (password in cleartext here, but if your server supports STARTTLS it
 # will be sent over the network encrypted).
 #smtp_username = None
 #smtp_password = None
+smtp_username = $smtp_username
+smtp_password = $smtp_password
 
 # If your SMTP server requires SSL from the beginning of the connection
 #smtp_ssl = False
@@ -488,7 +490,7 @@ smtp_server = localhost
 # will be sent to this address.  Error reports are disabled if no address is
 # set.  Also this email is shown as a contact to user in case of Galaxy
 # misconfiguration and other events user may encounter.
-error_email_to = support@globus.org
+error_email_to = $error_email_to
 
 # Email address to use in the 'From' field when sending emails for
 # account activations, workflow step notifications and password resets.

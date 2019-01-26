@@ -298,7 +298,11 @@ def configure_galaxy_ini(main_config=None, instance_config=None, creds_config=No
         "len_file_path": len_file_path,
         "admin_users": admin_users,
         "id_secret": creds_config.get("galaxy", "id_secret"),
-        "welcome_url": instance_config["galaxy"]["welcome_url"]
+        "welcome_url": instance_config["galaxy"]["welcome_url"],
+        "smtp_server": creds_config.get("mail_system", "smtp_server"),
+        "smtp_username": creds_config.get("mail_system", "smtp_username"),
+        "smtp_password": creds_config.get("mail_system", "smtp_password"),
+        "error_email_to": creds_config.get("mail_system", "support_email")
     }
     template = open( 'files/galaxy.ini.template' )
     src = Template( template.read() )
