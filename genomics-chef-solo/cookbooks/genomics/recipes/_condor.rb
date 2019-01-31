@@ -53,6 +53,13 @@ directory node[:genomics][:condor][:execute_dir] do
   recursive true
 end
 
+directory "/var/spool/condor" do
+  mode 0755
+  owner "condor"
+  group "condor"
+  recursive true
+end
+
 # Create the local configuration file.
 
 template "/etc/condor/condor_config.local" do
