@@ -1,9 +1,9 @@
 {
-    "name": "test1.globusgenomics.org",
-    "genomics_galaxy_version": "dev",
+    "name": "eupathdbdev.globusgenomics.org",
+    "genomics_galaxy_version": "dev_eupathdb",
     "volumes": {
         "scratch_volume": {
-            "size": 100,
+            "size": 500,
             "encrypted": True,
             "volume_type": "gp2",
             "mount_point": "/scratch",
@@ -19,17 +19,17 @@
             "size": 35,
             "encrypted": False
         },
-        "galaxyIndices": {
-            "snapshot_id": "current_release",
+        "galaxyIndices2": {
+            "snapshot_id": "snap-046347d719bd7f97c",
             "volume_type": "gp2",
-            "mount_point": "/mnt/galaxyIndices",
+            "mount_point": "/mnt/galaxyIndices2",
             "mount_point_user": "galaxy",
             "mount_device": "/dev/sdy",
-            "size": 1130,
+            "size": 1536,
             "encrypted": False
         }
     },
-    "nfs_export_dirs": ["/home/galaxy", "/opt/galaxy", "/mnt/galaxyTools", "/mnt/galaxyIndices", "/scratch"],
+    "nfs_export_dirs": ["/home/galaxy", "/opt/galaxy", "/mnt/galaxyTools", "/mnt/galaxyIndices2", "/scratch"],
     "provisioner": {
         "worker": {
             "worker_type": "r3.8xlarge",
@@ -44,24 +44,24 @@
         "use_rds_postgresql_server": True
     },
     "globus": {
-        "globus_use_group": True,
-        "globus_group_id": "920e3148-a6d3-11e2-8266-12313809f035"
+        "globus_use_group": False,
+        "globus_group_id": None
     },
     "galaxy": {
-        "tool_data_path": "tool-data",
-        "len_file_path": "/mnt/galaxyIndices/galaxy/chrom",
-        "admin_users": "test@test.org",
-        "welcome_url": "/static/welcome.html",
-        "error_email_to": "support@globusgenomics.org"
+        "tool_data_path": "tool-data-eupath",
+        "len_file_path": "/mnt/galaxyIndices2/galaxy/tool-data/len_files",
+        "admin_users": "xiao2.243859313@eupathdb.org,arodri7.108468660@eupathdb.org,eve.uga.71792880@eupathdb.org,ebasenko.108464520.eupathdb.org,sfischer.119782143@eupathdb.org",
+        "welcome_url": "/static/welcome_eupathdb.html",
+        "error_email_to": "help@eupathdb.org"
     },
     "aws": {
-        "kms_key_id": "6272cd5d-362f-4b8d-8593-7f165d239c49",
+        "kms_key_id": "a582f2ba-af93-48d2-8a4c-2fd38d78f5f4",
         "worker_subnets": {
-            "us-east-1a": "subnet-824316af",
-            "us-east-1b": "subnet-68221821",
-            "us-east-1c": "subnet-79eaaa22",
-            "us-east-1e": "subnet-f68d04ca"
+            "us-east-1b": "subnet-4e379763",
+            "us-east-1c": "subnet-4749da0e",
+            "us-east-1d": "subnet-0f369254",
+            "us-east-1e": "subnet-d5c70ee9"
         },
-        "worker_security_group": "sg-193ba365"
+        "worker_security_group": "sg-f4cc0689"
     }
 }

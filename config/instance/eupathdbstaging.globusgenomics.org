@@ -51,7 +51,8 @@
         "tool_data_path": "tool-data-eupath",
         "len_file_path": "/mnt/galaxyIndices2/galaxy/tool-data/len_files",
         "admin_users": "xiao2.243859313@eupathdb.org,arodri7.108468660@eupathdb.org,eve.uga.71792880@eupathdb.org,ebasenko.108464520.eupathdb.org",
-        "welcome_url": "/static/welcome_eupathdb.html"
+        "welcome_url": "/static/welcome_eupathdb.html",
+        "error_email_to": "help@eupathdb.org"
     },
     "aws": {
         "kms_key_id": "a582f2ba-af93-48d2-8a4c-2fd38d78f5f4",

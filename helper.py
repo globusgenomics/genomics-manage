@@ -302,7 +302,7 @@ def configure_galaxy_ini(main_config=None, instance_config=None, creds_config=No
         "smtp_server": creds_config.get("mail_system", "smtp_server"),
         "smtp_username": creds_config.get("mail_system", "smtp_username"),
         "smtp_password": creds_config.get("mail_system", "smtp_password"),
-        "error_email_to": creds_config.get("mail_system", "support_email")
+        "error_email_to": instance_config["galaxy"]["error_email_to"]
     }
     template = open( 'files/galaxy.ini.template' )
     src = Template( template.read() )
@@ -369,6 +369,16 @@ def update_gg_version_in_welcome_page(main_config=None, instance_config=None, re
     uid = pwd.getpwnam("galaxy").pw_uid
     gid = grp.getgrnam("galaxy").gr_gid
     os.chown(welcome_page, uid, gid)
+
+def update_tool_data_table_conf(instance_config=None):
+    if instance_config["galaxy"]["tool_data_path"] != "tool-data":
+        file_path = "/opt/galaxy/config/tool_data_table_conf.xml"
+        search_content = "tool-data/"
+        replace_content = "{0}/".format(instance_config["galaxy"]["tool_data_path"])
+        replaceAll(file_path, search_content, replace_content)
+        uid = pwd.getpwnam("galaxy").pw_uid
+        gid = grp.getgrnam("galaxy").gr_gid
+        os.chown(file_path, uid, gid)
 
 def get_gg_repo_and_branch(main_config=None, instance_config=None, releases_config=None):
     genomics_galaxy_branch = instance_config["genomics_galaxy_version"]

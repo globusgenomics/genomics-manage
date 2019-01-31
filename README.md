@@ -106,7 +106,9 @@ Create config for an instance:
         # extra admin users, seperate by ,
         "admin_users": "test@test.org",
         # choose which welcome page
-        "welcome_url": "/static/welcome.html"
+        "welcome_url": "/static/welcome.html",
+        # support email address
+        "error_email_to": "support@globusgenomics.org"
     },
     "aws": {
         # the kms key used to encrypt volumes

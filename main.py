@@ -181,6 +181,8 @@ if options.action == "launch":
     configure_galaxy_job_conf(instance_config=instance_config)
     # configure tool_conf.xml
     configure_galaxy_tool_conf(node_name_short=node_name_short)
+    # update tool_data_table_conf.xml if necessary
+    update_tool_data_table_conf(instance_config=instance_config)
     # update gg version num
     update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
 
@@ -223,6 +225,8 @@ if options.action == "update":
         configure_galaxy_job_conf(instance_config=instance_config)
         # configure tool_conf.xml
         configure_galaxy_tool_conf(node_name_short=node_name_short)
+        # update tool_data_table_conf.xml if necessary
+        update_tool_data_table_conf(instance_config=instance_config)
         # update gg version num
         update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
         # run _galaxy recipe

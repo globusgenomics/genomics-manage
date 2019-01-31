@@ -51,7 +51,8 @@
         "tool_data_path": "tool-data",
         "len_file_path": "/mnt/galaxyIndices/galaxy/chrom",
         "admin_users": "",
-        "welcome_url": "/static/welcome.html"
+        "welcome_url": "/static/welcome.html",
+        "error_email_to": "support@globusgenomics.org"
     },
     "aws": {
         "kms_key_id": "6272cd5d-362f-4b8d-8593-7f165d239c49",
