@@ -795,6 +795,7 @@ nginx_x_accel_redirect_base = True
 # Verbosity of console log messages.  Acceptable values can be found here:
 # https://docs.python.org/2/library/logging.html#logging-levels
 #log_level = DEBUG
+log_level = ERROR
 
 # Print database operations to the server log (warning, quite verbose!).
 #database_engine_option_echo = False

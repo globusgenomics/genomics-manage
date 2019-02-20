@@ -5,3 +5,30 @@ user send email through Gnomics Galaxy:
 server@globusgenomics => CC USER and send to support@globusgenomics.org ...
 how the team is notified:
 support@globusgenomics.org (from zendesk) => globusgenomics-support@lists.uchicago.edu => team members => team member login to zendesk and work on the ticket
+
+
+[globus shared endpoint 1000 ACL limit warning]
+Instance side work:
+- vim /opt/scripts/nagios-plugins/monitor_shared_endpoint_acl_limit.py
+- copy the content from monitor_shared_endpoint_acl_limit.py
+- chmod 755 /opt/scripts/nagios-plugins/monitor_shared_endpoint_acl_limit.py
+- vim /etc/nagios/nrpe.cfg: add this line to the end: command[shared_endpoint_acl_num]=/opt/scripts/nagios-plugins/monitor_shared_endpoint_acl_limit.py
+- restart service: service nagios-nrpe-server restart
+
+Nagios server side work:
+- vim /etc/nagios3/conf.d/commands.cfg: 
+define command {
+  command_name    check_shared_endpoint_acl_num
+  command_line    $USER1$/check_nrpe -H $HOSTADDRESS$ -c shared_endpoint_acl_num
+}
+- vim /etc/nagios3/conf.d/services.cfg 
+define service {
+  service_description shared_endpoint_acl_num
+  hostgroup_name organization_eupath
+  check_command check_shared_endpoint_acl_num
+  use default-service-long-check-interval
+
+}
+- service nagios3 reload
+
+if acl num close to limit, use code in clean_shared_endpoint_acl.py
