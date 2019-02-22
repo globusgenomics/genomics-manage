@@ -147,7 +147,7 @@ def filter_tool_conf(headnode, config_file):
     result = ""
 
     def make_decision(line, headnode):
-        DEV_ORGANIZATIONS = ["dev", "dev1", "dev2", "test1", "test2", "test3", "test"]
+        DEV_ORGANIZATIONS = ["dev", "dev1", "dev2", "test1", "test2", "test3", "test", "staging"]
         if "organization_include=" in line and "organization_exclude=" in line:
             print "ERROR: organization_include and organization_exclude cannot present at the same time."
             print line
