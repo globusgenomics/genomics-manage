@@ -1,0 +1,67 @@
+{
+    "name": "pilot1.globusgenomics.org",
+    "genomics_galaxy_version": "current_release",
+    "volumes": {
+        "scratch_volume": {
+            "size": 100,
+            "encrypted": True,
+            "volume_type": "gp2",
+            "mount_point": "/scratch",
+            "mount_device": "/dev/sdf",
+            "file_system": "ext4"
+        },
+        "galaxyTools": {
+            "snapshot_id": "current_release",
+            "volume_type": "gp2",
+            "mount_point": "/mnt/galaxyTools",
+            "mount_point_user": "galaxy",
+            "mount_device": "/dev/sdz",
+            "size": 40,
+            "encrypted": False
+        },
+        "galaxyIndices": {
+            "snapshot_id": "current_release",
+            "volume_type": "gp2",
+            "mount_point": "/mnt/galaxyIndices",
+            "mount_point_user": "galaxy",
+            "mount_device": "/dev/sdy",
+            "size": 1350,
+            "encrypted": False
+        }
+    },
+    "nfs_export_dirs": ["/home/galaxy", "/opt/galaxy", "/mnt/galaxyTools", "/mnt/galaxyIndices", "/scratch"],
+    "provisioner": {
+        "worker": {
+            "worker_type": "r3.8xlarge",
+            "worker_bid_price": "3.00",
+            "worker_num_cpus": "32",
+            "worker_is_hvm": True,
+            "merged_ephemerals": True
+        },
+        "use_on_demand_instance": False
+    },
+    "database": {
+        "use_rds_postgresql_server": True
+    },
+    "globus": {
+        "globus_use_group": True,
+        "globus_group_id": "46def710-5092-11e4-8bb9-22000ab68755"
+    },
+    "galaxy": {
+        "tool_data_path": "tool-data",
+        "len_file_path": "/mnt/galaxyIndices/galaxy/chrom",
+        "admin_users": "",
+        "welcome_url": "/static/welcome.html",
+        "error_email_to": "support@globusgenomics.org"
+    },
+    "aws": {
+        "kms_key_id": "6272cd5d-362f-4b8d-8593-7f165d239c49",
+        "worker_subnets": {
+            "us-east-1a": "subnet-824316af",
+            "us-east-1b": "subnet-68221821",
+            "us-east-1c": "subnet-79eaaa22",
+            "us-east-1e": "subnet-f68d04ca"
+        },
+        "worker_security_group": "sg-193ba365"
+    }
+}

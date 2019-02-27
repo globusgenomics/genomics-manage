@@ -414,7 +414,7 @@ def configure_galaxy_ini(main_config=None, instance_config=None, creds_config=No
         len_file_path = instance_config["galaxy"]["len_file_path"]
     else:
         len_file_path = "/mnt/galaxyIndices/galaxy/chrom"
-    if "galaxy" in instance_config and "admin_users" in instance_config["galaxy"]:
+    if "galaxy" in instance_config and "admin_users" in instance_config["galaxy"] and instance_config["galaxy"]["admin_users"] not in ["", None]:
         admin_users = main_config["galaxy"]["admin_users"] + "," + instance_config["galaxy"]["admin_users"]
     else:
         admin_users = main_config["galaxy"]["admin_users"]
