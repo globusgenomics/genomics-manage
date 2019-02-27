@@ -30,6 +30,10 @@ define host {
 ```
 - Optional: add galaxy-reports service, e.g. python main.py --action update --instance test1.globusgenomics.org --update-type galaxy-reports
 
+Other services:
+- Replcace volumes: it is useful for updating volumes such as galaxyTools and galaxyIndices. e.g. python main.py --action update --instance test1.globusgenomics.org --update-type volume --volume-name galaxyTools; then you may remove the old volume manually.
+- Release update: e.g. python main.py --action update --instance test1.globusgenomics.org --update-type release_update --backup-galaxy; this will reinstall Galaxy, and replace all volumes except scratch.
+
 Create config for an instance:
 ```
 {

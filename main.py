@@ -21,6 +21,9 @@ python main.py --action update --instance test1.globusgenomics.org --update-type
 python main.py --action update --instance test1.globusgenomics.org --update-type galaxy
 python main.py --action update --instance test1.globusgenomics.org --update-type galaxy --backup-galaxy
 python main.py --action update --instance test1.globusgenomics.org --update-type galaxy-reports
+python main.py --action update --instance test1.globusgenomics.org --update-type volume --volume-name galaxyTools
+python main.py --action update --instance test1.globusgenomics.org --update-type release_update
+python main.py --action update --instance test1.globusgenomics.org --update-type release_update --backup-galaxy
 python main.py --action test-function --instance test1.globusgenomics.org
 """
 
@@ -28,6 +31,7 @@ parser.add_option("--action", dest="action", help="launch, config, update")
 parser.add_option("--instance", dest="instance", help="instance")
 parser.add_option("--update-type", dest="update_type", help="update type")
 parser.add_option("--backup-galaxy", dest="backup_galaxy", help="backup old galaxy when update galaxy", action="store_true", default=False)
+parser.add_option("--volume-name", dest="volume_name", help="volume name")
 
 options, args = parser.parse_args(args)
 
@@ -38,27 +42,38 @@ if options.action not in ["launch", "update", "test-function"]:
     sys.exit("invalid action")
 assert options.instance != None
 
+# main config
 with open("config/main.config") as f:
     main_config = eval(f.read())
-
 pprint(main_config)
 
+# release condig
 with open("config/releases.config") as f:
     releases_config = eval(f.read())
-
 pprint(releases_config)
 
+# instance config
 instance_config_path = "config/instance/{0}".format(options.instance)
 with open(instance_config_path) as f:
     instance_config = eval(f.read())
-
 pprint(instance_config)
 
-current_path = os.getcwd() #os.path.dirname(os.path.realpath(__file__))
-aws_meta_url = "http://169.254.169.254/latest/meta-data/"
+# creds config
 creds_config = ConfigParser.ConfigParser()
 creds_config.read("secret/creds")
 
+# instance aws info
+aws_meta_url = "http://169.254.169.254/latest/meta-data/"
+availability_zone = requests.get((aws_meta_url + "placement/availability-zone")).content
+aws_region = availability_zone[0:-1]
+instance_id = requests.get((aws_meta_url + "instance-id")).content
+instance_aws_info = {
+    "availability_zone": availability_zone,
+    "aws_region": aws_region,
+    "instance_id": instance_id
+}
+
+current_path = os.getcwd() #os.path.dirname(os.path.realpath(__file__))
 
 # prepare configs for chef-solo
 # solo.rb
@@ -97,57 +112,16 @@ if options.action == "launch":
     execute_chef_run_list(solo_config_base=solo_config_base, run_list=run_list)
 
     # create and attach the required volumes
-    availability_zone = requests.get((aws_meta_url + "placement/availability-zone")).content
-    aws_region = availability_zone[0:-1]
-    instance_id = requests.get((aws_meta_url + "instance-id")).content
     #volumes_info = dict(main_config["volumes"].items() + instance_config["volumes"].items())
     volumes_info = instance_config["volumes"]
 
     for volume_name, volume_info in volumes_info.iteritems():
-        
-        if "snapshot_id" in volume_info:
-            if volume_info["snapshot_id"] == "current_release":
-                snapshot_id = releases_config[main_config["current_release"]]["snapshots"][volume_name]
-            else:
-                snapshot_id = volume_info["snapshot_id"]
-            file_system = None
-        else:
-            snapshot_id = None
-            file_system = volume_info["file_system"]
-
-        encrypted = volume_info["encrypted"]
-        if encrypted == True:
-            kms_key_id = instance_config["aws"]["kms_key_id"]
-        else:
-            kms_key_id = None
-
-        size = volume_info["size"]
-
-        volume_type = volume_info["volume_type"]
-
-        tag = "{0} ({1})".format(instance_config["name"], volume_name)
-
-        device = volume_info["mount_device"]
-        mount_point = volume_info["mount_point"]
-
-        if "mount_point_user" in volume_info:
-            mount_point_user = volume_info["mount_point_user"]
-        else:
-            mount_point_user = None
-
-        create_ec2_volume(region=aws_region,
-                  AvailabilityZone=availability_zone, 
-                  Encrypted=encrypted,
-                  KmsKeyId=kms_key_id,
-                  Size=size,
-                  SnapshotId=snapshot_id,
-                  VolumeType=volume_type,
-                  Tag=tag,
-                  InstanceId=instance_id,
-                  Device=device,
-                  file_system=file_system,
-                  mount_point=mount_point,
-                  mount_point_user=mount_point_user)
+        create_volume(volume_name=volume_name, 
+                      volume_info=volume_info,
+                      releases_config=releases_config,
+                      main_config=main_config,
+                      instance_config=instance_config,
+                      instance_aws_info=instance_aws_info )
 
     # nfs setup
     nfs_export_dirs = instance_config["nfs_export_dirs"]
@@ -203,41 +177,66 @@ if options.action == "update":
         run_list = main_config["instance_setup"]["chef"]["run_list_step_1"].split(",")
         execute_chef_run_list(solo_config_base=solo_config_base, run_list=run_list)
     elif options.update_type == "galaxy":
-        command = "supervisorctl stop galaxy:"
-        subprocess.call(command, shell=True)
-        if options.backup_galaxy:
-            print "backup galaxy..."
-            mv_and_backup_galaxy()
-        else:
-            print "remove /opt/galaxy..."
-            command = "rm -r /opt/galaxy"
-            subprocess.call(command, shell=True)
-        if not os.path.exists("/opt/galaxy"):
-            os.makedirs("/opt/galaxy")
-            uid = pwd.getpwnam("galaxy").pw_uid
-            gid = grp.getgrnam("galaxy").gr_gid
-            os.chown("/opt/galaxy", uid, gid)
-        # download and configure Galaxy
-        download_galaxy(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
-        # configure galaxy.ini
-        configure_galaxy_ini(main_config=main_config, instance_config=instance_config, creds_config=creds_config, node_name_short=node_name_short)
-        # configure job_conf.xml
-        configure_galaxy_job_conf(instance_config=instance_config)
-        # configure tool_conf.xml
-        configure_galaxy_tool_conf(node_name_short=node_name_short)
-        # update tool_data_table_conf.xml if necessary
-        update_tool_data_table_conf(instance_config=instance_config)
-        # update gg version num
-        update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
-        # run _galaxy recipe
-        execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy]"])
-        # start galaxy-reports
-        execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy_reports]"])
-        command = "supervisorctl start galaxy:"
-        subprocess.call(command, shell=True)
+        reinstall_galaxy(main_config=main_config,
+                         instance_config=instance_config,
+                         releases_config=releases_config,
+                         backup_galaxy=options.backup_galaxy,
+                         creds_config=creds_config,
+                         node_name_short=node_name_short,
+                         solo_config_base=solo_config_base)
     elif options.update_type =="galaxy-reports":
         # start galaxy-reports
         execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy_reports]"])
+    elif options.update_type =="volume":
+        # replace volume
+        assert options.volume_name != None
+        volumes_info = instance_config["volumes"]
+        assert options.volume_name in volumes_info
+        volume_info = volumes_info[options.volume_name]
+        # make sure nfs is off
+        print "stoping nfs-kernel-server ..."
+        command = "service nfs-kernel-server stop"
+        subprocess.call(command, shell=True)
+        detach_volume(volume_info=volume_info, instance_aws_info=instance_aws_info)
+        create_volume(volume_name=options.volume_name, 
+                      volume_info=volume_info,
+                      releases_config=releases_config,
+                      main_config=main_config,
+                      instance_config=instance_config,
+                      instance_aws_info=instance_aws_info )
+        # start nfs
+        print "starting nfs-kernel-server ..."
+        command = "service nfs-kernel-server start"
+        subprocess.call(command, shell=True)
+    elif options.update_type =="release_update":
+        # reinstall Galaxy 
+        reinstall_galaxy(main_config=main_config,
+                         instance_config=instance_config,
+                         releases_config=releases_config,
+                         backup_galaxy=options.backup_galaxy,
+                         creds_config=creds_config,
+                         node_name_short=node_name_short,
+                         solo_config_base=solo_config_base)
+        # replace volumes
+        volumes_info = instance_config["volumes"]
+        # make sure nfs is off
+        print "stoping nfs-kernel-server ..."
+        command = "service nfs-kernel-server stop"
+        subprocess.call(command, shell=True)
+        for volume_name, volume_info in volumes_info.iteritems():
+            # skip scratch_volume
+            if volume_name != "scratch_volume":
+                detach_volume(volume_info=volume_info, instance_aws_info=instance_aws_info)
+                create_volume(volume_name=volume_name, 
+                              volume_info=volume_info,
+                              releases_config=releases_config,
+                              main_config=main_config,
+                              instance_config=instance_config,
+                              instance_aws_info=instance_aws_info )
+        # start nfs
+        print "starting nfs-kernel-server ..."
+        command = "service nfs-kernel-server start"
+        subprocess.call(command, shell=True)
     else:
         sys.exit("update type not supported.")
 

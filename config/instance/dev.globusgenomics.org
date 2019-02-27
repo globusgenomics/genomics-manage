@@ -16,7 +16,7 @@
             "mount_point": "/mnt/galaxyTools",
             "mount_point_user": "galaxy",
             "mount_device": "/dev/sdz",
-            "size": 35,
+            "size": 40,
             "encrypted": False
         },
         "galaxyIndices": {
@@ -25,7 +25,7 @@
             "mount_point": "/mnt/galaxyIndices",
             "mount_point_user": "galaxy",
             "mount_device": "/dev/sdy",
-            "size": 1130,
+            "size": 1350,
             "encrypted": False
         }
     },

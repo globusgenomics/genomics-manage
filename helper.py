@@ -11,6 +11,134 @@ from string import Template
 import difflib
 import datetime
 import fileinput
+from pprint import pprint
+
+
+def reinstall_galaxy(main_config=None,
+                     instance_config=None,
+                     releases_config=None,
+                     backup_galaxy=False,
+                     creds_config=None,
+                     node_name_short=None,
+                     solo_config_base=None):
+    command = "supervisorctl stop galaxy:"
+    subprocess.call(command, shell=True)
+    if backup_galaxy:
+        print "backup galaxy..."
+        mv_and_backup_galaxy()
+    else:
+        print "remove /opt/galaxy..."
+        command = "rm -r /opt/galaxy"
+        subprocess.call(command, shell=True)
+    if not os.path.exists("/opt/galaxy"):
+        os.makedirs("/opt/galaxy")
+        uid = pwd.getpwnam("galaxy").pw_uid
+        gid = grp.getgrnam("galaxy").gr_gid
+        os.chown("/opt/galaxy", uid, gid)
+    # download and configure Galaxy
+    download_galaxy(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
+    # configure galaxy.ini
+    configure_galaxy_ini(main_config=main_config, instance_config=instance_config, creds_config=creds_config, node_name_short=node_name_short)
+    # configure job_conf.xml
+    configure_galaxy_job_conf(instance_config=instance_config)
+    # configure tool_conf.xml
+    configure_galaxy_tool_conf(node_name_short=node_name_short)
+    # update tool_data_table_conf.xml if necessary
+    update_tool_data_table_conf(instance_config=instance_config)
+    # update gg version num
+    update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
+    # run _galaxy recipe
+    execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy]"])
+    # start galaxy-reports
+    execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy_reports]"])
+    command = "supervisorctl start galaxy:"
+    subprocess.call(command, shell=True)
+
+
+def detach_volume(volume_info=None, instance_aws_info=None):
+    # umount the volume
+    command = "umount {0}".format(volume_info["mount_point"])
+    print "{0} ...".format(command)
+    subprocess.call(command, shell=True)
+    # get the volume id
+    client = boto3.client('ec2', region_name=instance_aws_info["aws_region"])
+    response = client.describe_instances(InstanceIds=[instance_aws_info["instance_id"]])
+    BlockDeviceMappings = response["Reservations"][0]["Instances"][0]["BlockDeviceMappings"]
+    for i in BlockDeviceMappings:
+        if i["DeviceName"] == volume_info["mount_device"]:
+            volume_id = i["Ebs"]["VolumeId"]
+            volume_status = i["Ebs"]["Status"]
+            break
+    # detach volume
+    if volume_status == "attached":
+        print "detaching volume {0} ...".format(volume_id)
+        client.detach_volume(VolumeId=volume_id)
+        # wait for the volume to be in available state
+        while True:
+            volume_response = client.describe_volumes(VolumeIds=[volume_id])
+            volume_state = volume_response['Volumes'][0]['State']
+            if volume_state == 'available':
+                print ('volume {0} is in available state.'.format(volume_id))
+                break
+            else:
+                print ('volume {0} is not in available state, wait for several seconds...'.format(volume_id))
+                sleep(3)
+
+
+def create_volume(volume_name=None, 
+                  volume_info=None,
+                  releases_config=None,
+                  main_config=None,
+                  instance_config=None,
+                  instance_aws_info=None):
+    if "snapshot_id" in volume_info:
+        if volume_info["snapshot_id"] == "current_release":
+            snapshot_id = releases_config[main_config["current_release"]]["snapshots"][volume_name]
+        else:
+            snapshot_id = volume_info["snapshot_id"]
+        file_system = None
+    else:
+        snapshot_id = None
+        file_system = volume_info["file_system"]
+
+    encrypted = volume_info["encrypted"]
+    if encrypted == True:
+        kms_key_id = instance_config["aws"]["kms_key_id"]
+    else:
+        kms_key_id = None
+
+    size = volume_info["size"]
+
+    volume_type = volume_info["volume_type"]
+
+    tag = "{0} ({1})".format(instance_config["name"], volume_name)
+
+    device = volume_info["mount_device"]
+    mount_point = volume_info["mount_point"]
+
+    if "mount_point_user" in volume_info:
+        mount_point_user = volume_info["mount_point_user"]
+    else:
+        mount_point_user = None
+
+    aws_region = instance_aws_info["aws_region"]
+    availability_zone = instance_aws_info["availability_zone"]
+    instance_id = instance_aws_info["instance_id"]
+
+    create_ec2_volume(region=aws_region,
+              AvailabilityZone=availability_zone, 
+              Encrypted=encrypted,
+              KmsKeyId=kms_key_id,
+              Size=size,
+              SnapshotId=snapshot_id,
+              VolumeType=volume_type,
+              Tag=tag,
+              InstanceId=instance_id,
+              Device=device,
+              file_system=file_system,
+              mount_point=mount_point,
+              mount_point_user=mount_point_user)
+
 
 def create_ec2_volume(region=None,
                       AvailabilityZone=None, 
@@ -28,6 +156,7 @@ def create_ec2_volume(region=None,
     client = boto3.client('ec2', region_name=region)
 
     # create volume
+    print "creating volume..."
     if SnapshotId == None:
         SnapshotId = ''
 
