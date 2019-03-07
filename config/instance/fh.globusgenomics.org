@@ -50,7 +50,7 @@
     "galaxy": {
         "tool_data_path": "tool-data",
         "len_file_path": "/mnt/galaxyIndices/galaxy/chrom",
-        "admin_users": "",
+        "admin_users": "bret@fredhutch.org,bdodson@fredhutch.org,hdctest@fredhutch.org,apaguiri@fredhutch.org",
         "welcome_url": "/static/welcome.html",
         "error_email_to": "support@globusgenomics.org"
     },
