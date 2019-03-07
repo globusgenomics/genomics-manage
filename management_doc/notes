@@ -32,3 +32,11 @@ define service {
 - service nagios3 reload
 
 if acl num close to limit, use code in clean_shared_endpoint_acl.py
+
+[purge Galaxy datasets]
+#!/bin/sh
+
+cd /opt/galaxy
+python ./scripts/cleanup_datasets/admin_cleanup_datasets.py ./config/galaxy.ini -d 30 --fromaddr none >> /var/log/genomics/galaxy_cleanup_datasets.log
+python ./scripts/cleanup_datasets/cleanup_datasets.py ./config/galaxy.ini -d 0 -6 -r >> /var/log/genomics/galaxy_cleanup_datasets.log
+python ./scripts/cleanup_datasets/cleanup_datasets.py ./config/galaxy.ini -d 0 -3 -r >> /var/log/genomics/galaxy_cleanup_datasets.log
