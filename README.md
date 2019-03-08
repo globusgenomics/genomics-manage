@@ -6,7 +6,8 @@ Steps to launch an instance:
     - select genomics-vpc VPC
     - select genomics-vpc-headnode subnet
     - select gg-head-node-role IAM role
-    - increase root volume size to 15G
+    - protect from accidental termination
+    - increase root volume size to 15G, and choose gp2 type
     - select genomics-vpc-headnode-sg security group
 - Update the DNS with the instance's public ip
 - Get the manage package

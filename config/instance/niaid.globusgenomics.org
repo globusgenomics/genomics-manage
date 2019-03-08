@@ -1,0 +1,69 @@
+{
+    "name": "niaid.globusgenomics.org",
+    "genomics_galaxy_version": "current_release",
+    "volumes": {
+        "scratch_volume": {
+            "size": 2048,
+            "encrypted": True,
+            "volume_type": "gp2",
+            "mount_point": "/scratch",
+            "mount_device": "/dev/sdf",
+            "file_system": "ext4"
+        },
+        "galaxyTools": {
+            "snapshot_id": "current_release",
+            "volume_type": "gp2",
+            "mount_point": "/mnt/galaxyTools",
+            "mount_point_user": "galaxy",
+            "mount_device": "/dev/sdz",
+            "size": 40,
+            "encrypted": False
+        },
+        "galaxyIndices": {
+            "snapshot_id": "current_release",
+            "volume_type": "gp2",
+            "mount_point": "/mnt/galaxyIndices",
+            "mount_point_user": "galaxy",
+            "mount_device": "/dev/sdy",
+            "size": 1350,
+            "encrypted": False
+        }
+    },
+    "nfs_export_dirs": ["/home/galaxy", "/opt/galaxy", "/mnt/galaxyTools", "/mnt/galaxyIndices", "/scratch"],
+    "provisioner": {
+        "worker": {
+            "worker_type": "r3.8xlarge",
+            "worker_bid_price": "3.00",
+            "worker_num_cpus": "32",
+            "worker_is_hvm": True,
+            "merged_ephemerals": True
+        },
+        "use_on_demand_instance": False
+    },
+    "database": {
+        "use_rds_postgresql_server": True
+    },
+    "globus": {
+        "globus_use_group": True,
+        "globus_group_id": "839a4b8e-4156-11e9-afc1-0a2091cc973c"
+    },
+    "galaxy": {
+        "tool_data_path": "tool-data",
+        "len_file_path": "/mnt/galaxyIndices/galaxy/chrom",
+        "admin_users": "",
+        "welcome_url": "/static/welcome.html",
+        "error_email_to": "support@globusgenomics.org"
+    },
+    "aws": {
+        "kms_key_id": "80216e77-da2b-47fa-9877-eb7f10d7a08d",
+        "worker_subnets": {
+            "us-east-1a": "subnet-0ec463e842449bee4",
+            "us-east-1b": "subnet-01055b271d58b2746",
+            "us-east-1c": "subnet-0b8f7c2d29f8758f9",
+            "us-east-1d": "subnet-04fd90274b3cbee86",
+            "us-east-1e": "subnet-05dd3a233c0a40c2b",
+            "us-east-1f": "subnet-07a95f22697ee98bf"
+        },
+        "worker_security_group": "sg-053e797814d913f3e"
+    }
+}
