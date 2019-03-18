@@ -1,5 +1,8 @@
 #install condor
 apt-get update
+apt-get install -y libltdl7
+apt-get install -y libvirt0
+apt-get install -y libdate-manip-perl
 wget http://repo.globusgenomics.org/packages/condor_8.2.6-288241_amd64.deb
 dpkg -i condor_8.2.6-288241_amd64.deb
 dpkg -i genomics-chef-solo/chefdk_1.5.0-1_amd64.deb
