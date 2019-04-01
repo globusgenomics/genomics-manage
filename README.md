@@ -107,6 +107,7 @@ Create config for an instance:
     "galaxy": {
         # specific which tool-data dir to use
         "tool_data_path": "tool-data",
+        "tool_data_table_config_path": "config/tool_data_table_conf.xml",
         "len_file_path": "/mnt/galaxyIndices/galaxy/chrom",
         # extra admin users, seperate by ,
         "admin_users": "test@test.org",

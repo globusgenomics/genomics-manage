@@ -49,6 +49,7 @@
     },
     "galaxy": {
         "tool_data_path": "tool-data",
+        "tool_data_table_config_path": "config/tool_data_table_conf.xml",
         "len_file_path": "/mnt/galaxyIndices/galaxy/chrom",
         "admin_users": "test@test.org",
         "welcome_url": "/static/welcome.html",

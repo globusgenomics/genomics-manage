@@ -1,9 +1,9 @@
 {
-    "name": "eupathdbdev.globusgenomics.org",
-    "genomics_galaxy_version": "dev_eupathdb",
+    "name": "eupathdb.globusgenomics.org",
+    "genomics_galaxy_version": "current_release",
     "volumes": {
         "scratch_volume": {
-            "size": 500,
+            "size": 100,
             "encrypted": True,
             "volume_type": "gp2",
             "mount_point": "/scratch",

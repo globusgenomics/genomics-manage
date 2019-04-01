@@ -410,6 +410,10 @@ def configure_galaxy_ini(main_config=None, instance_config=None, creds_config=No
         tool_data_path = instance_config["galaxy"]["tool_data_path"]
     else:
         tool_data_path = "tool-data"
+    if "galaxy" in instance_config and "tool_data_table_config_path" in instance_config["galaxy"]:
+        tool_data_table_config_path = instance_config["galaxy"]["tool_data_table_config_path"]
+    else:
+        tool_data_table_config_path = "config/tool_data_table_conf.xml"
     if "galaxy" in instance_config and "len_file_path" in instance_config["galaxy"]:
         len_file_path = instance_config["galaxy"]["len_file_path"]
     else:
@@ -424,6 +428,7 @@ def configure_galaxy_ini(main_config=None, instance_config=None, creds_config=No
         "globus_group_id": instance_config["globus"]["globus_group_id"],
         "database_connection": database_connection,
         "tool_data_path": tool_data_path,
+        "tool_data_table_config_path": tool_data_table_config_path,
         "len_file_path": len_file_path,
         "admin_users": admin_users,
         "id_secret": creds_config.get("galaxy", "id_secret"),
