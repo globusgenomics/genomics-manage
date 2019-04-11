@@ -159,6 +159,8 @@ if options.action == "launch":
     update_tool_data_table_conf(instance_config=instance_config)
     # update gg version num
     update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
+    # extra steps
+    extra_steps(creds_config=creds_config, node_name_short=node_name_short)
 
     # run chef-solo_step_2
     run_list = main_config["instance_setup"]["chef"]["run_list_step_2"].split(",")

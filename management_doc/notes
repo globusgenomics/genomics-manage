@@ -11,6 +11,7 @@ support@globusgenomics.org (from zendesk) => globusgenomics-support@lists.uchica
 Instance side work:
 - vim /opt/scripts/nagios-plugins/monitor_shared_endpoint_acl_limit.py
 - copy the content from monitor_shared_endpoint_acl_limit.py
+- add the creds in the script
 - chmod 755 /opt/scripts/nagios-plugins/monitor_shared_endpoint_acl_limit.py
 - vim /etc/nagios/nrpe.cfg: add this line to the end: command[shared_endpoint_acl_num]=/opt/scripts/nagios-plugins/monitor_shared_endpoint_acl_limit.py
 - restart service: service nagios-nrpe-server restart

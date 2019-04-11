@@ -40,7 +40,7 @@ Create config for an instance:
 {
     # instance name
     "name": "test1.globusgenomics.org",
-    # branch name or use current release at main.config which picks a release from releases.config, if you want to use a different repo, specify "repo##branch", such as "https://github.com/globusgenomics/genomics-galaxy-dev.git##dev"
+    # branch name or use "current release" at main.config which picks a release from releases.config or use "release_RELEASENUM" such as "release_5.4" to pick a release directly, if you want to use a different repo, specify "repo##branch", such as "https://github.com/globusgenomics/genomics-galaxy-dev.git##dev"
     "genomics_galaxy_version": "current_release",
     # volumes to attach to the instance
     "volumes": {
@@ -57,6 +57,7 @@ Create config for an instance:
         },
         # Genomics Tools volume
         "galaxyTools": {
+            # snapshot_id can be a snapshot id or "current_release" or "release_RELEASENUM" such as "release_5.4"
             "snapshot_id": "current_release",
             "volume_type": "gp2",
             "mount_point": "/mnt/galaxyTools",
@@ -67,6 +68,7 @@ Create config for an instance:
         },
         # Genomics Indices volume
         "galaxyIndices": {
+            # snapshot_id can be a snapshot id or "current_release" or "release_RELEASENUM" such as "release_5.4"
             "snapshot_id": "current_release",
             "volume_type": "gp2",
             "mount_point": "/mnt/galaxyIndices",

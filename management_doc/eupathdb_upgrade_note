@@ -1,0 +1,19 @@
+setup backup to S3 script:
+make sure the instance has the access to bucket gg-eupathdb-dataset-backup
+vim /opt/scripts/backup_datasets_to_s3.sh :
+
+#!/bin/sh
+
+cd /opt/galaxy
+/opt/galaxy/.venv/bin/python ./scripts/cleanup_datasets/eupath_backup_data_to_s3.py ./config/galaxy.ini -d 300 --fromaddr none >> /var/log/genomics/backup_datasets_to_s3.log
+
+chown galaxy:galaxy /opt/scripts/backup_datasets_to_s3.sh
+chmod 744 /opt/scripts/backup_datasets_to_s3.sh
+
+vim /var/spool/cron/crontabs/galaxy :
+
+0 1 * * * /opt/scripts/backup_datasets_to_s3.sh
+
+
+
+setup monitor globus shared endpoint ACL number

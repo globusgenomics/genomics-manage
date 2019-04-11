@@ -2,8 +2,10 @@
 import globus_sdk
 import re
 import sys
+import requests.packages.urllib3
+requests.packages.urllib3.disable_warnings()
 
-endpoint_id = "e18ffae2-ebb9-11e6-b9d6-22000b9a448b"
+endpoint_id = "da0b899c-549b-11e9-bf31-0edbf3a4e7ee"
 
 #CRED_FILE = "/home/galaxy/.globusgenomics/globus_transfer_cred"
 

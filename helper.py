@@ -47,6 +47,8 @@ def reinstall_galaxy(main_config=None,
     update_tool_data_table_conf(instance_config=instance_config)
     # update gg version num
     update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
+    # extra steps
+    extra_steps(creds_config=creds_config, node_name_short=node_name_short)
     # run _galaxy recipe
     execute_chef_run_list(solo_config_base=solo_config_base, run_list=["recipe[genomics::_galaxy]"])
     # start galaxy-reports
@@ -94,6 +96,10 @@ def create_volume(volume_name=None,
     if "snapshot_id" in volume_info:
         if volume_info["snapshot_id"] == "current_release":
             snapshot_id = releases_config[main_config["current_release"]]["snapshots"][volume_name]
+        elif volume_info["snapshot_id"].startswith("release_"):
+            release_num_tmp = volume_info["snapshot_id"]
+            release_num = release_num_tmp[len("release_"):]
+            snapshot_id = releases_config[release_num]["snapshots"][volume_name]
         else:
             snapshot_id = volume_info["snapshot_id"]
         file_system = None
@@ -441,20 +447,23 @@ def configure_galaxy_ini(main_config=None, instance_config=None, creds_config=No
     template = open( 'files/galaxy.ini.template' )
     src = Template( template.read() )
     updated_content = src.safe_substitute(config_info)
-    with open("/opt/galaxy/config/galaxy.ini", "r") as f:
+    file_path = "/opt/galaxy/config/galaxy.ini"
+    with open(file_path, "r") as f:
         old_content = f.read()
     if old_content != updated_content:
         for text in difflib.unified_diff(old_content.split("\n"), updated_content.split("\n"), fromfile="galaxy.ini", tofile="updated galaxy.ini"):
             print text
-        with open("/opt/galaxy/config/galaxy.ini", "w") as f:
+        with open(file_path, "w") as f:
             f.write(updated_content)
+    update_file_ownership(file_path=file_path)
 
 
 def configure_galaxy_job_conf(instance_config=None):
     # configure job_conf.xml
+    file_path = "/opt/galaxy/config/job_conf.xml"
     updated_content = ""
     worker_num_cpus = instance_config["provisioner"]["worker"]["worker_num_cpus"]
-    with open("/opt/galaxy/config/job_conf.xml", "r") as f:
+    with open(file_path, "r") as f:
         old_content = f.read()
     for line in old_content.split("\n"):
         if ('destination="condor_remote_' in line) and \
@@ -468,20 +477,23 @@ def configure_galaxy_job_conf(instance_config=None):
     if old_content != updated_content:
         for text in difflib.unified_diff(old_content.split("\n"), updated_content.split("\n"), fromfile="job_conf.xml", tofile="updated job_conf.xml"):
             print text
-        with open("/opt/galaxy/config/job_conf.xml", "w") as f:
+        with open(file_path, "w") as f:
             f.write(updated_content)
+    update_file_ownership(file_path=file_path)
 
 
 def configure_galaxy_tool_conf(node_name_short=None):
     # configure tool_conf.xml
-    updated_content = filter_tool_conf(node_name_short, "/opt/galaxy/config/tool_conf.xml")
-    with open("/opt/galaxy/config/tool_conf.xml", "r") as f:
+    file_path = "/opt/galaxy/config/tool_conf.xml"
+    updated_content = filter_tool_conf(node_name_short, file_path)
+    with open(file_path, "r") as f:
         old_content = f.read()
     if old_content != updated_content:
         for text in difflib.unified_diff(old_content.split("\n"), updated_content.split("\n"), fromfile="tool_conf.xml", tofile="updated tool_conf.xml"):
             print text
-        with open("/opt/galaxy/config/tool_conf.xml", "w") as f:
+        with open(file_path, "w") as f:
             f.write(updated_content)
+    update_file_ownership(file_path=file_path)
 
 def mv_and_backup_galaxy():
     if not os.path.exists("/scratch/backup"):
@@ -500,9 +512,7 @@ def update_gg_version_in_welcome_page(main_config=None, instance_config=None, re
     welcome_page = "/opt/galaxy" + instance_config["galaxy"]["welcome_url"]
     updated_content = '<td class="logo_table_row">{0}</td>'.format(branch_name)
     replaceAll(welcome_page, '<td class="logo_table_row"></td>', updated_content)
-    uid = pwd.getpwnam("galaxy").pw_uid
-    gid = grp.getgrnam("galaxy").gr_gid
-    os.chown(welcome_page, uid, gid)
+    update_file_ownership(file_path=welcome_page)
 
 def update_tool_data_table_conf(instance_config=None):
     if instance_config["galaxy"]["tool_data_path"] != "tool-data":
@@ -510,9 +520,7 @@ def update_tool_data_table_conf(instance_config=None):
         search_content = "tool-data/"
         replace_content = "{0}/".format(instance_config["galaxy"]["tool_data_path"])
         replaceAll(file_path, search_content, replace_content)
-        uid = pwd.getpwnam("galaxy").pw_uid
-        gid = grp.getgrnam("galaxy").gr_gid
-        os.chown(file_path, uid, gid)
+        update_file_ownership(file_path=file_path)
 
 def get_gg_repo_and_branch(main_config=None, instance_config=None, releases_config=None):
     genomics_galaxy_branch = instance_config["genomics_galaxy_version"]
@@ -523,7 +531,45 @@ def get_gg_repo_and_branch(main_config=None, instance_config=None, releases_conf
     else:
         if genomics_galaxy_branch == "current_release":
             genomics_galaxy_branch = releases_config[main_config["current_release"]]["galaxy_repo_branch"]
+        elif genomics_galaxy_branch.startswith("release_"):
+            release_num = genomics_galaxy_branch[len("release_"):]
+            genomics_galaxy_branch = releases_config[release_num]["galaxy_repo_branch"]
         genomics_galaxy_repo = "https://github.com/globusgenomics/genomics-galaxy-dev.git"
     return (genomics_galaxy_repo, genomics_galaxy_branch)
 
+def update_file_ownership(file_path=None, to_user="galaxy"):
+    uid = pwd.getpwnam(to_user).pw_uid
+    gid = grp.getgrnam(to_user).gr_gid
+    os.chown(file_path, uid, gid)
+
+def extra_steps(creds_config=None, node_name_short=None):
+    # extra steps needed for specific requests
+    # take care of eupathdb's tool's creds
+    file_path = "/opt/galaxy/tools/eupath/Tools/config/config.json"
+    if os.path.isfile(file_path) and node_name_short in ["eupathdb", "eupathdbstaging", "eupathdbdev"]:
+        if node_name_short in ["eupathdb", "eupathdbstaging"]:
+            config_info = {
+                "url": creds_config.get("eupath_tool_cred", "url0")
+                "user": creds_config.get("eupath_tool_cred", "user0"),
+                "password": creds_config.get("eupath_tool_cred", "password0")
+            }
+        elif node_name_short in ["eupathdbdev"]:
+            config_info = {
+                "url": creds_config.get("eupath_tool_cred", "url1")
+                "user": creds_config.get("eupath_tool_cred", "user1"),
+                "password": creds_config.get("eupath_tool_cred", "password1")
+            }
+        else:
+            sys.exit("instance is not supported")
+        template = open( 'files/eupath_tool_config.template' )
+        src = Template( template.read() )
+        updated_content = src.safe_substitute(config_info)
+        with open(file_path, "r") as f:
+            old_content = f.read()
+        if old_content != updated_content:
+            for text in difflib.unified_diff(old_content.split("\n"), updated_content.split("\n"), fromfile=file_path, tofile="updated file"):
+                print text
+            with open(file_path, "w") as f:
+                f.write(updated_content)
+        update_file_ownership(file_path=file_path)
 
