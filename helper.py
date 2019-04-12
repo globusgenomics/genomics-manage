@@ -549,13 +549,13 @@ def extra_steps(creds_config=None, node_name_short=None):
     if os.path.isfile(file_path) and node_name_short in ["eupathdb", "eupathdbstaging", "eupathdbdev"]:
         if node_name_short in ["eupathdb", "eupathdbstaging"]:
             config_info = {
-                "url": creds_config.get("eupath_tool_cred", "url0")
+                "url": creds_config.get("eupath_tool_cred", "url0"),
                 "user": creds_config.get("eupath_tool_cred", "user0"),
                 "password": creds_config.get("eupath_tool_cred", "password0")
             }
         elif node_name_short in ["eupathdbdev"]:
             config_info = {
-                "url": creds_config.get("eupath_tool_cred", "url1")
+                "url": creds_config.get("eupath_tool_cred", "url1"),
                 "user": creds_config.get("eupath_tool_cred", "user1"),
                 "password": creds_config.get("eupath_tool_cred", "password1")
             }
