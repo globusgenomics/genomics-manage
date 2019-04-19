@@ -265,7 +265,7 @@ if active_spot_requests != []:
         try:
             command = "condor_status -claimed -direct {0} 2>/dev/null".format(running_instance_private_dns_name)
             claimed = subprocess.check_output(command, shell=True)
-            claimed = requested_cpus.strip()
+            claimed = claimed.strip()
         except:
             claimed = None
         if claimed in ["", None]:

@@ -44,7 +44,7 @@ def reinstall_galaxy(main_config=None,
     # configure tool_conf.xml
     configure_galaxy_tool_conf(node_name_short=node_name_short)
     # update tool_data_table_conf.xml if necessary
-    update_tool_data_table_conf(instance_config=instance_config)
+    #update_tool_data_table_conf(instance_config=instance_config)
     # update gg version num
     update_gg_version_in_welcome_page(main_config=main_config, instance_config=instance_config, releases_config=releases_config)
     # extra steps
@@ -514,13 +514,13 @@ def update_gg_version_in_welcome_page(main_config=None, instance_config=None, re
     replaceAll(welcome_page, '<td class="logo_table_row"></td>', updated_content)
     update_file_ownership(file_path=welcome_page)
 
-def update_tool_data_table_conf(instance_config=None):
-    if instance_config["galaxy"]["tool_data_path"] != "tool-data":
-        file_path = "/opt/galaxy/config/tool_data_table_conf.xml"
-        search_content = "tool-data/"
-        replace_content = "{0}/".format(instance_config["galaxy"]["tool_data_path"])
-        replaceAll(file_path, search_content, replace_content)
-        update_file_ownership(file_path=file_path)
+#def update_tool_data_table_conf(instance_config=None):
+#    if instance_config["galaxy"]["tool_data_path"] != "tool-data":
+#        file_path = "/opt/galaxy/config/tool_data_table_conf.xml"
+#        search_content = "tool-data/"
+#        replace_content = "{0}/".format(instance_config["galaxy"]["tool_data_path"])
+#        replaceAll(file_path, search_content, replace_content)
+#        update_file_ownership(file_path=file_path)
 
 def get_gg_repo_and_branch(main_config=None, instance_config=None, releases_config=None):
     genomics_galaxy_branch = instance_config["genomics_galaxy_version"]
