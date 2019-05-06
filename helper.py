@@ -546,8 +546,8 @@ def extra_steps(creds_config=None, node_name_short=None):
     # extra steps needed for specific requests
     # take care of eupathdb's tool's creds
     file_path = "/opt/galaxy/tools/eupath/Tools/config/config.json"
-    if os.path.isfile(file_path) and node_name_short in ["eupathdb", "eupathdbstaging", "eupathdbdev"]:
-        if node_name_short in ["eupathdb", "eupathdbstaging"]:
+    if os.path.isfile(file_path) and node_name_short in ["eupathdb", "eupathdbstaging", "eupathdbdev", "eupathdbworkshop"]:
+        if node_name_short in ["eupathdb", "eupathdbstaging", "eupathdbworkshop"]:
             config_info = {
                 "url": creds_config.get("eupath_tool_cred", "url0"),
                 "user": creds_config.get("eupath_tool_cred", "user0"),

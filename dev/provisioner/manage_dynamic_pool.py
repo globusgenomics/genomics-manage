@@ -13,22 +13,17 @@ requests.packages.urllib3.disable_warnings()
 from pprint import pprint
 
 # Config
-instance = "dev"
+instance = "$instance_name"
 
 worker_name="worker@{0}".format(instance)
 
-az_to_subnet = {
-    "us-east-1a": "subnet-824316af",
-    "us-east-1b": "subnet-68221821",
-    "us-east-1c": "subnet-79eaaa22",
-    "us-east-1e": "subnet-f68d04ca"
-}
+az_to_subnet = $az_to_subnet
 
 ec2_types = ["r3.8xlarge", "r4.8xlarge"]
 worker_cpus = 32
 price = "3.00"
 ami = "ami-d05e75b8"
-security_group = "sg-193ba365"
+security_group = "$security_group"
 user_data_file = {
     "r3.8xlarge": "/opt/scripts/provisioner/cloudinit.cfg",
     "r4.8xlarge": "/opt/scripts/provisioner/cloudinit_0.cfg"
@@ -40,7 +35,7 @@ ses_aws_secret_access_key = ""
 bad_spot_zone_record_file = "/opt/scripts/provisioner/bad_spot_zone"
 
 # Get number of cpus and nodes requested by jobs being in the idle state longer than 2 minutes (120 secs)
-command = 'condor_q -format "%s\n" RequestCpus -constraint "JobStatus == 1 && QDate < $(date +%s) - 120" | paste -sd+ | bc'
+command = 'condor_q -format "%s\n" RequestCpus -constraint "JobStatus == 1 && QDate < $$(date +%s) - 120" | paste -sd+ | bc'
 requested_cpus = subprocess.check_output(command, shell=True)
 requested_cpus = requested_cpus.strip()
 
@@ -99,12 +94,14 @@ def record_bad_spot_zone(request):
                 else:
                     write_back = write_back + line + "\n"
             if not found:
-                    time_now = datetime.datetime.now()
-                    info_to_write = "{0} {1} {2}\n".format(instance_type_tmp, availability_zone_tmp, time_now.strftime("%m/%d/%Y/%H:%M:%S"))
-                    write_back = write_back + info_to_write
+                send_email("spot status: \n{0}".format(request))
+                time_now = datetime.datetime.now()
+                info_to_write = "{0} {1} {2}\n".format(instance_type_tmp, availability_zone_tmp, time_now.strftime("%m/%d/%Y/%H:%M:%S"))
+                write_back = write_back + info_to_write
         with open(bad_spot_zone_record_file, "w") as f:
             f.write(write_back)
     else:
+        send_email("spot status: \n{0}".format(request))
         time_now = datetime.datetime.now()
         info_to_write = "{0} {1} {2}\n".format(instance_type_tmp, availability_zone_tmp, time_now.strftime("%m/%d/%Y/%H:%M:%S"))
         with open(bad_spot_zone_record_file, "w") as f:
@@ -181,7 +178,11 @@ for request in open_spot_requests:
     if spot_status_code in MONITORED_SPOT_STATUS_CODE:
         healthy_open_spot_requests_num = healthy_open_spot_requests_num - 1
         record_bad_spot_zone(request)
-        send_email("spot status: {0} \n{1}".format(spot_status_code, request))
+        try:
+            client.cancel_spot_instance_requests(SpotInstanceRequestIds=[request["SpotInstanceRequestId"]])
+        except Exception as e:
+            send_email("failed to cancel spot request: message: {0} \n {1}".format(e, request))
+
 
 unclaimed_nodes_num = healthy_open_spot_requests_num
 
