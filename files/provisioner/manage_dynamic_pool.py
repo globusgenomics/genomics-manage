@@ -22,15 +22,15 @@ az_to_subnet = $az_to_subnet
 ec2_types = ["r3.8xlarge", "r4.8xlarge"]
 worker_cpus = 32
 price = "3.00"
-ami = "ami-d05e75b8"
+ami = "ami-079f96ce4a4a7e1c7"
 security_group = "$security_group"
 user_data_file = {
     "r3.8xlarge": "/opt/scripts/provisioner/cloudinit.cfg",
     "r4.8xlarge": "/opt/scripts/provisioner/cloudinit_0.cfg"
 }
 
-ses_aws_access_key_id = ""
-ses_aws_secret_access_key = ""
+ses_aws_access_key_id = "$ses_aws_access_key_id"
+ses_aws_secret_access_key = "$ses_aws_secret_access_key"
 
 bad_spot_zone_record_file = "/opt/scripts/provisioner/bad_spot_zone"
 

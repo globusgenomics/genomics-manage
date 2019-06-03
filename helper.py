@@ -411,7 +411,7 @@ def configure_galaxy_ini(main_config=None, instance_config=None, creds_config=No
     if instance_config["database"]["use_rds_postgresql_server"]:
         database_connection = "postgresql://{0}:{1}@rds.ops.globusgenomics.org:5432/galaxy_{2}".format(creds_config.get("rds", "user"), creds_config.get("rds", "password"), node_name_short)
     else:
-        database_connection = "postgres:///galaxy_{0}?user=galaxy&password=galaxy&host=/var/run/postgresql".foramt(node_name_short)
+        database_connection = "postgres:///galaxy_{0}?user=galaxy&password=galaxy&host=/var/run/postgresql".format(node_name_short)
     if "galaxy" in instance_config and "tool_data_path" in instance_config["galaxy"]:
         tool_data_path = instance_config["galaxy"]["tool_data_path"]
     else:
@@ -573,3 +573,17 @@ def extra_steps(creds_config=None, node_name_short=None):
                 f.write(updated_content)
         update_file_ownership(file_path=file_path)
 
+
+def configure_file_template(template_file=None, file_path=None, config_info=None):
+    # update a template file
+    template = open( template_file )
+    src = Template( template.read() )
+    updated_content = src.safe_substitute(config_info)
+    with open(file_path, "r") as f:
+        old_content = f.read()
+    if old_content != updated_content:
+        for text in difflib.unified_diff(old_content.split("\n"), updated_content.split("\n"), fromfile=file_path, tofile=file_path):
+            print text
+        with open(file_path, "w") as f:
+            f.write(updated_content)
+            

@@ -13,7 +13,6 @@ private_ip = "172.25.255.196"
 host_name = "ds.navipointgenomics.com"
 
 # gg prod
-"""
 az_to_subnet = {
     "us-east-1a": "subnet-824316af",
     "us-east-1b": "subnet-68221821",
@@ -21,10 +20,6 @@ az_to_subnet = {
     "us-east-1e": "subnet-f68d04ca"
 }
 security_group = "sg-193ba365"
-"""
-# npg
-az_to_subnet = {'us-east-1b': 'subnet-0dfb8fc05eed40205', 'us-east-1c': 'subnet-0ae501e77565e652f', 'us-east-1a': 'subnet-0e8114da14ea98295', 'us-east-1f': 'subnet-071469ccf2dfc666c', 'us-east-1d': 'subnet-00d650b9892a913f4', 'us-east-1e': 'subnet-0a70fb681a96e8555'}
-security_group = "sg-033cf863d5e66a803"
 
 domain_name = host_name[host_name.find(".") + 1 :]
 instance_name = host_name[: host_name.find(".")]

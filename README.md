@@ -2,7 +2,7 @@
 
 Steps to launch an instance:
 - Launch a ec2 instance as head node
-    - select Ubuntu 14.04 as OS
+    - select Ubuntu 18.04 as OS
     - select genomics-vpc VPC
     - select genomics-vpc-headnode subnet
     - select gg-head-node-role IAM role
@@ -12,7 +12,6 @@ Steps to launch an instance:
 - Update the DNS with the instance's public ip
 - Get the manage package
     - ssh to the instance
-    - install git: sudo apt-get update; sudo apt-get install -y git
     - git clone https://github.com/globusgenomics/genomics-manage.git
     - upload secret to the secret directory
 - Install the prerequisites as root: sh setup.sh
@@ -82,7 +81,7 @@ Create config for an instance:
     "nfs_export_dirs": ["/home/galaxy", "/opt/galaxy", "/mnt/galaxyTools", "/mnt/galaxyIndices", "/scratch"],
     # provisioner setup
     "provisioner": {
-        # setup for workers
+        # # NOT IN USE setup for workers 
         "worker": {
             "worker_type": "r3.8xlarge",
             # bid price for spot instance
@@ -92,7 +91,7 @@ Create config for an instance:
             # merged ephemerals if there are more than one volumes come with the instance
             "merged_ephemerals": True
         },
-        # use spot instance by default, so set this flag to True if use on demand instances
+        # # NOT IN USE use spot instance by default, so set this flag to True if use on demand instances
         "use_on_demand_instance": False
     },
     # database setup, 

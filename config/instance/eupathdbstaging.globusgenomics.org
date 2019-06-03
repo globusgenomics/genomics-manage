@@ -1,6 +1,6 @@
 {
     "name": "eupathdbstaging.globusgenomics.org",
-    "genomics_galaxy_version": "release_5.4",
+    "genomics_galaxy_version": "release_5.5",
     "volumes": {
         "scratch_volume": {
             "size": 500,
@@ -11,7 +11,7 @@
             "file_system": "ext4"
         },
         "galaxyTools": {
-            "snapshot_id": "release_5.4",
+            "snapshot_id": "release_5.5",
             "volume_type": "gp2",
             "mount_point": "/mnt/galaxyTools",
             "mount_point_user": "galaxy",
@@ -20,7 +20,7 @@
             "encrypted": False
         },
         "galaxyIndices2": {
-            "snapshot_id": "release_5.4",
+            "snapshot_id": "release_5.5",
             "volume_type": "gp2",
             "mount_point": "/mnt/galaxyIndices2",
             "mount_point_user": "galaxy",

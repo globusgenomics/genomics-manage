@@ -7,6 +7,7 @@ import pwd
 import grp
 import ConfigParser
 from helper import *
+from provisioner import *
 
 from optparse import OptionParser
 args=None
@@ -67,10 +68,12 @@ aws_meta_url = "http://169.254.169.254/latest/meta-data/"
 availability_zone = requests.get((aws_meta_url + "placement/availability-zone")).content
 aws_region = availability_zone[0:-1]
 instance_id = requests.get((aws_meta_url + "instance-id")).content
+private_ip = requests.get((aws_meta_url + "local-ipv4")).content
 instance_aws_info = {
     "availability_zone": availability_zone,
     "aws_region": aws_region,
-    "instance_id": instance_id
+    "instance_id": instance_id,
+    "private_ip": private_ip
 }
 
 current_path = os.getcwd() #os.path.dirname(os.path.realpath(__file__))
@@ -79,6 +82,8 @@ current_path = os.getcwd() #os.path.dirname(os.path.realpath(__file__))
 # solo.rb
 node_name = instance_config["name"]
 node_name_short = node_name.split(".")[0]
+domain_name = node_name[node_name.find(".") + 1 :]
+
 to_write = """
 node_name "%s"
 
@@ -165,6 +170,9 @@ if options.action == "launch":
     # run chef-solo_step_2
     run_list = main_config["instance_setup"]["chef"]["run_list_step_2"].split(",")
     execute_chef_run_list(solo_config_base=solo_config_base, run_list=run_list)
+
+    # deploy provisioner
+    deploy_provisioner(instance_aws_info=instance_aws_info, node_name=node_name, node_name_short=node_name_short, domain_name=domain_name, instance_config=instance_config, creds_config=creds_config)
 
 # update action
 if options.action == "update":
