@@ -39,3 +39,14 @@ def deploy_provisioner(instance_aws_info=None, node_name=None, node_name_short=N
     }
     file_path = os.path.join(provisioner_dir, "manage_dynamic_pool.py")
     configure_file_template(template_file="files/provisioner/manage_dynamic_pool.py", file_path=file_path, config_info=config_info)
+
+    """
+    to_insert = "{0} *(rw,sync,root_squash,no_subtree_check)\n".format(item)
+    with open('/etc/exports', 'r+') as f:
+        for line in f:
+            if line.startswith(to_insert):
+                print 'Found line in /etc/exports.'
+                break
+        else:
+            f.write(to_insert)
+    """

@@ -10,6 +10,7 @@ dpkg -i condor_8.2.6-288241_amd64.deb
 dpkg -i genomics-chef-solo/chefdk_1.5.0-1_amd64.deb
 apt-get install -y nfs-kernel-server
 apt-get install -y python-pip
+apt-get install -y python-dev 
 apt-get install -y libssl-dev
 #pip install virtualenv
 #virtualenv venv
