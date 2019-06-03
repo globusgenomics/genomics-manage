@@ -2,7 +2,7 @@
 
 Steps to launch an instance:
 - Launch a ec2 instance as head node
-    - select Ubuntu 14.04 as OS
+    - select Ubuntu 18.04 as OS
     - select genomics-vpc VPC
     - select genomics-vpc-headnode subnet
     - select gg-head-node-role IAM role
@@ -12,7 +12,6 @@ Steps to launch an instance:
 - Update the DNS with the instance's public ip
 - Get the manage package
     - ssh to the instance
-    - install git: sudo apt-get update; sudo apt-get install -y git
     - git clone https://github.com/globusgenomics/genomics-manage.git
     - upload secret to the secret directory
 - Install the prerequisites as root: sh setup.sh

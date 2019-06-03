@@ -73,7 +73,7 @@ template "/etc/condor/condor_config.local" do
   notifies :restart, "service[condor]"
 end
 
-
+=begin
 # Install scripts to manage condor pool
 
 directory "/opt/scripts" do
@@ -116,3 +116,4 @@ cron "galaxy provisioner" do
   command   "/opt/scripts/manage_dynamic_pool.sh #{node['system']['short_hostname']} >> #{node['genomics']['provisioner']['logfile']} 2>>#{node['genomics']['provisioner']['error_logfile']}"
   notifies  :restart, "service[cron]"
 end
+=end

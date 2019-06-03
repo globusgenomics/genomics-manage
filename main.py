@@ -172,7 +172,7 @@ if options.action == "launch":
     execute_chef_run_list(solo_config_base=solo_config_base, run_list=run_list)
 
     # deploy provisioner
-    #deploy_provisioner(instance_aws_info=instance_aws_info, node_name=node_name, node_name_short=node_name_short, domain_name=domain_name, instance_config=instance_config, creds_config=creds_config)
+    deploy_provisioner(instance_aws_info=instance_aws_info, node_name=node_name, node_name_short=node_name_short, domain_name=domain_name, instance_config=instance_config, creds_config=creds_config)
 
 # update action
 if options.action == "update":

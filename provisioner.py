@@ -6,6 +6,8 @@ def deploy_provisioner(instance_aws_info=None, node_name=None, node_name_short=N
 
     ssh_key_path = "/home/galaxy/.ssh/id_rsa.pub"
 
+    cron_file = "/var/spool/cron/crontabs/root"
+
     with open(ssh_key_path, "r") as f:
         ssh_key = f.read().strip()
 
@@ -39,14 +41,12 @@ def deploy_provisioner(instance_aws_info=None, node_name=None, node_name_short=N
     }
     file_path = os.path.join(provisioner_dir, "manage_dynamic_pool.py")
     configure_file_template(template_file="files/provisioner/manage_dynamic_pool.py", file_path=file_path, config_info=config_info)
-
-    """
-    to_insert = "{0} *(rw,sync,root_squash,no_subtree_check)\n".format(item)
-    with open('/etc/exports', 'r+') as f:
+    
+    to_insert = "*/2 * * * * python /opt/scripts/provisioner/manage_dynamic_pool.py >> /var/log/genomics/provision.log 2>>/var/log/genomics/provision.error.log"
+    with open(cron_file, 'r+') as f:
         for line in f:
             if line.startswith(to_insert):
                 print 'Found line in /etc/exports.'
                 break
         else:
             f.write(to_insert)
-    """
