@@ -22,7 +22,7 @@ az_to_subnet = $az_to_subnet
 ec2_types = ["r3.8xlarge", "r4.8xlarge"]
 worker_cpus = 32
 price = "3.00"
-ami = "ami-079f96ce4a4a7e1c7"
+ami = "ami-07b4156579ea1d7ba"
 security_group = "$security_group"
 user_data_file = {
     "r3.8xlarge": "/opt/scripts/provisioner/cloudinit.cfg",

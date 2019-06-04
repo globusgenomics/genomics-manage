@@ -2,7 +2,7 @@
 
 Steps to launch an instance:
 - Launch a ec2 instance as head node
-    - select Ubuntu 18.04 as OS
+    - select Ubuntu 16.04 as OS
     - select genomics-vpc VPC
     - select genomics-vpc-headnode subnet
     - select gg-head-node-role IAM role

@@ -579,8 +579,12 @@ def configure_file_template(template_file=None, file_path=None, config_info=None
     template = open( template_file )
     src = Template( template.read() )
     updated_content = src.safe_substitute(config_info)
-    with open(file_path, "r") as f:
-        old_content = f.read()
+    if os.path.exists(file_path):
+        with open(file_path, "r") as f:
+            old_content = f.read()
+    else:
+        with open(template_file, "r") as f:
+            old_content = f.read()
     if old_content != updated_content:
         for text in difflib.unified_diff(old_content.split("\n"), updated_content.split("\n"), fromfile=file_path, tofile=file_path):
             print text
