@@ -43,10 +43,15 @@ def deploy_provisioner(instance_aws_info=None, node_name=None, node_name_short=N
     configure_file_template(template_file="files/provisioner/manage_dynamic_pool.py", file_path=file_path, config_info=config_info)
     
     to_insert = "*/2 * * * * python /opt/scripts/provisioner/manage_dynamic_pool.py >> /var/log/genomics/provision.log 2>>/var/log/genomics/provision.error.log"
-    with open(cron_file, 'r+') as f:
-        for line in f:
-            if line.startswith(to_insert):
-                print 'Found line in /etc/exports.'
-                break
-        else:
+    if os.path.exists(cron_file):
+        with open(cron_file, 'r+') as f:
+            for line in f:
+                if line.startswith(to_insert):
+                    print 'Found line in /etc/exports.'
+                    break
+            else:
+                f.write(to_insert)
+    else:
+        with open(cron_file, 'w') as f:
             f.write(to_insert)
+            
