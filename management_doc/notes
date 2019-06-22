@@ -38,7 +38,7 @@ if acl num close to limit, use code in clean_shared_endpoint_acl.py
 #!/bin/sh
 
 cd /opt/galaxy
-/opt/galaxy/.venv/bin/python ./scripts/cleanup_datasets/admin_cleanup_datasets.py ./config/galaxy.ini -d 30 --fromaddr none >> /var/log/genomics/galaxy_cleanup_datasets.log
+PYTHONPATH=lib /opt/galaxy/.venv/bin/python ./scripts/cleanup_datasets/admin_cleanup_datasets.py ./config/galaxy.ini -d 30 --fromaddr none >> /var/log/genomics/galaxy_cleanup_datasets.log
 
 /opt/galaxy/.venv/bin/python ./scripts/cleanup_datasets/cleanup_datasets.py ./config/galaxy.ini -d 60 -1 -r >> /var/log/genomics/galaxy_cleanup_datasets.log
 /opt/galaxy/.venv/bin/python ./scripts/cleanup_datasets/cleanup_datasets.py ./config/galaxy.ini -d 60 -2 -r >> /var/log/genomics/galaxy_cleanup_datasets.log
@@ -46,3 +46,7 @@ cd /opt/galaxy
 /opt/galaxy/.venv/bin/python ./scripts/cleanup_datasets/cleanup_datasets.py ./config/galaxy.ini -d 60 -5 -r >> /var/log/genomics/galaxy_cleanup_datasets.log
 /opt/galaxy/.venv/bin/python ./scripts/cleanup_datasets/cleanup_datasets.py ./config/galaxy.ini -d 0 -6 -r >> /var/log/genomics/galaxy_cleanup_datasets.log
 /opt/galaxy/.venv/bin/python ./scripts/cleanup_datasets/cleanup_datasets.py ./config/galaxy.ini -d 0 -3 -r >> /var/log/genomics/galaxy_cleanup_datasets.log
+
+
+[switch globus primary identity]
+In order for the user to switch his primary and secondary identities, he will need to unlink them from his account page- https://www.globus.org/app/account, and then completely log out (- Logout of Globus, go to globus.org and log out. - Logout of Globus ID, go to globusid.org directly, and click logout (or globusid.org/logout). *important*, - Clear your browser cookies and cache, - Close all your browser windows and tabs). Then he should log in with his globusid and then 'Add a linked identity' from his account page - https://www.globus.org/app/account. Now his primary account will be his globusid, and his secondary will be his identity via UChicago.

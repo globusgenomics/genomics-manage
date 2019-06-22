@@ -121,7 +121,8 @@ def get_and_filter_bad_spot_zone_list():
                 info = line.split()
                 info_time = datetime.datetime.strptime(info[2], "%m/%d/%Y/%H:%M:%S")
                 time_now = datetime.datetime.now()
-                if (time_now - info_time).total_seconds() < 7200:
+                # remove it after 4 hours
+                if (time_now - info_time).total_seconds() < 14400:
                     write_back = write_back + line + "\n"
                     return_list.append([info[0], info[1]])
         with open(bad_spot_zone_record_file, "w") as f:
@@ -275,13 +276,13 @@ if active_spot_requests != []:
             print "Unclaimed running instance: {0}, {1}, launched {2}".format(instance_id, running_instance_private_dns_name, launch_time)
             if (datetime.datetime.now() - launch_time).total_seconds() < 3600:
                 unclaimed_nodes_num = unclaimed_nodes_num + 1
-            else:
-                print "Terminating the unclaimed running instance: {0}, {1}, launched {2}".format(instance_id, running_instance_private_dns_name, launch_time)
-                email_content = "Terminating the unclaimed running instance: {0}, {1}, launched {2}".format(instance_id, running_instance_private_dns_name, launch_time)
-                send_email(email_content)
-                try:
-                    client.terminate_instances(InstanceIds=[instance_id])
-                except Exception as e: print e
+            #else:
+                #print "(trying to) Terminating the unclaimed running instance: {0}, {1}, launched {2}".format(instance_id, running_instance_private_dns_name, launch_time)
+                #email_content = "(trying to) Terminating the unclaimed running instance: {0}, {1}, launched {2}".format(instance_id, running_instance_private_dns_name, launch_time)
+                #send_email(email_content)
+                #try:
+                #    client.terminate_instances(InstanceIds=[instance_id])
+                #except Exception as e: print e
 
 # ready to request spot instance
 nodes = nodes - unclaimed_nodes_num

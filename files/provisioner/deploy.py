@@ -1,4 +1,6 @@
 """
+!!! update the export dirs list, such as eupathdb's galaxyIndices2
+
 1. fill the args
 2. python deploy.py
 3. add the aws keys
@@ -10,7 +12,8 @@ import difflib
 
 ssh_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDqdjILj7kHDM2AkDqmxBaFn2IiO5xLKL7He4V0hPgZn/xTtmWb15nhJTvjSkzOgDlb/g+RTWMBJHHXBxd1TZw9sn6U/D/ijlEz7i11hEUbVHww7wLChFjkX9FNL99dhLpTBJqF/KdIq32a+yjKgQYdOGMrnIIohCKzaKkCvGU72BjO/xRPuZ1MJp5qEUAjLt3hANX3HSRlNxKNmkbNxgSqDfypCtyaK0JL1Nosl0ZnzTrN7+Ba0gozngIQrCSp3KEL7WMk4/yUq7dwJ0UpREIPjU+PjMrmVukcXzOs2hrGMhvrEtj81IknHInkZNLivmm5Yb9001suDXmQ1RQrJoqp galaxy@ds.navipointgenomics.com"
 private_ip = "172.25.255.196"
-host_name = "ds.navipointgenomics.com"
+host_name = "test1.globusgenomics.org"
+nfs_export_dirs = ["/home/galaxy", "/opt/galaxy", "/mnt/galaxyTools", "/mnt/galaxyIndices", "/scratch"]
 
 # gg prod
 az_to_subnet = {
@@ -23,6 +26,12 @@ security_group = "sg-193ba365"
 
 domain_name = host_name[host_name.find(".") + 1 :]
 instance_name = host_name[: host_name.find(".")]
+
+# get volume mounting information
+volume_mounting_info = ""
+mounting_template = " - [ mkdir, -p, {1} ]\n - echo '{0}:{1} {1} nfs4 auto 0 0' >> /etc/fstab\n"
+for i in nfs_export_dirs:
+    volume_mounting_info = volume_mounting_info + mounting_template.format(private_ip, i)
 
 
 def configure_file(template_file=None, file_path=None, config_info=None):
@@ -41,7 +50,8 @@ config_info = {
     "ssh_key": ssh_key,
     "private_ip": private_ip,
     "host_name": host_name,
-    "domain_name": domain_name
+    "domain_name": domain_name,
+    "volume_mounting_info": volume_mounting_info
 }
 
 configure_file(template_file="cloudinit.cfg", file_path="cloudinit.cfg", config_info=config_info)
@@ -50,7 +60,8 @@ config_info = {
     "ssh_key": ssh_key,
     "private_ip": private_ip,
     "host_name": host_name,
-    "domain_name": domain_name
+    "domain_name": domain_name,
+    "volume_mounting_info": volume_mounting_info
 }
 
 configure_file(template_file="cloudinit_0.cfg", file_path="cloudinit_0.cfg", config_info=config_info)
