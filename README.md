@@ -17,6 +17,19 @@ Steps to launch an instance:
 - Install the prerequisites as root: sh setup.sh
 - Update tool_conf.xml on galaxy repo if necessary; Check RDS if using RDS, that is make sure the database is available on RDS for this instance; Make sure the Globus Endpoint is not in use
 - Run main.py as root to configure the instance, e.g. python main.py --action launch --instance test1.globusgenomics.org
+(if the run failed at solo_step_2:
+su galaxy
+rm -r /opt/galaxy/.venv
+cd /opt/galaxy
+sh run.sh
+source .venv/bin/activate
+pip install --upgrade Paste
+pip install simplejson
+sh run.sh
+exit
+cd /home/ubuntu/genomics-manage
+python main.py --action update --instance test1.globusgenomics.org --update-type chef-solo_step_2
+)
 - Setup globus creds at /home/galaxy/.globusgenomics
 - Optional: Add it to Nagios monitoring: ssh to nagios.ops.globusgenomics.org, edit /etc/nagios3/conf.d/hosts.cfg and add the following, then sudo service nagios3 reload
 ```
