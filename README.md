@@ -29,6 +29,8 @@ sh run.sh
 exit
 cd /home/ubuntu/genomics-manage
 python main.py --action update --instance test1.globusgenomics.org --update-type chef-solo_step_2
+
+update hostname without reboot: hostnamectl set-hostname test1.globusgenomics.org
 )
 - Setup globus creds at /home/galaxy/.globusgenomics
 - Optional: Add it to Nagios monitoring: ssh to nagios.ops.globusgenomics.org, edit /etc/nagios3/conf.d/hosts.cfg and add the following, then sudo service nagios3 reload
