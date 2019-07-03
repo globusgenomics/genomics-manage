@@ -31,6 +31,8 @@ template "/opt/scripts/create_globus_shared_endpoint_script.py" do
   mode      0644
 end
 
+=begin
 execute "create shared endpoint" do
   command "python /opt/scripts/create_globus_shared_endpoint_script.py"
 end
+=end

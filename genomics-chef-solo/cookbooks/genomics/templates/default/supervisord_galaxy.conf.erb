@@ -2,7 +2,7 @@
 nodaemon=false
 
 [program:galaxy_web]
-command         = /opt/galaxy/.venv/bin/uwsgi --virtualenv .venv --ini-paste config/galaxy.ini --logdate --master --processes <%=node['cpu']['total']%> --threads 2 --logto <%=node['genomics']['galaxy']['logfile']%> --socket 127.0.0.1:<%=node['genomics']['galaxy']['port']%> --pythonpath lib --stats 127.0.0.1:9191
+command         = /opt/galaxy/.venv/bin/uwsgi --virtualenv .venv --ini-paste config/galaxy.ini --logdate --master --processes <%=node['cpu']['total']%> --threads 2 --listen 128 --logto <%=node['genomics']['galaxy']['logfile']%> --socket 127.0.0.1:<%=node['genomics']['galaxy']['port']%> --pythonpath lib --stats 127.0.0.1:9191
 directory       = /opt/galaxy
 umask           = 022
 autostart       = true

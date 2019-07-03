@@ -36,4 +36,4 @@ cookbook_file "/home/galaxy/.globusgenomics/globus_user_granted_0" do
   mode      0400
 end
 
-include_recipe "globus::globus_endpoint" 
+#include_recipe "globus::globus_endpoint" 
