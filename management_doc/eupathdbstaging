@@ -1,0 +1,4 @@
+create linux users such as john
+
+apt-get install subversion
+apt-get install emacs24

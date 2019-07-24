@@ -537,10 +537,13 @@ def get_gg_repo_and_branch(main_config=None, instance_config=None, releases_conf
         genomics_galaxy_repo = "https://github.com/globusgenomics/genomics-galaxy-dev.git"
     return (genomics_galaxy_repo, genomics_galaxy_branch)
 
-def update_file_ownership(file_path=None, to_user="galaxy"):
+def update_file_ownership(file_path=None, to_user="galaxy", to_mod=None):
+    # to_mod=0400 .etc
     uid = pwd.getpwnam(to_user).pw_uid
     gid = grp.getgrnam(to_user).gr_gid
     os.chown(file_path, uid, gid)
+    if to_mod != None:
+        os.chmod(file_path, to_mod)
 
 def extra_steps(creds_config=None, node_name_short=None):
     # extra steps needed for specific requests
@@ -572,6 +575,19 @@ def extra_steps(creds_config=None, node_name_short=None):
             with open(file_path, "w") as f:
                 f.write(updated_content)
         update_file_ownership(file_path=file_path)
+
+    # add ses creds
+    config_info = {
+        "aws_access_key_id": creds_config.get("ses_iam", "aws_access_key_id"),
+        "aws_secret_access_key": creds_config.get("ses_iam", "aws_secret_access_key")
+    }
+    template = open( 'aws_creds.template' )
+    src = Template( template.read() )
+    updated_content = src.safe_substitute(config_info)
+    file_path = "/home/galaxy/.globusgenomics/aws_creds"
+    with open(file_path, "w") as f:
+        f.write(updated_content)
+    update_file_ownership(file_path=file_path, to_mod=0400)
 
 
 def configure_file_template(template_file=None, file_path=None, config_info=None):
