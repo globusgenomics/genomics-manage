@@ -43,6 +43,7 @@ end
 # cert
 ssl_path = "/etc/letsencrypt/live/#{node.name}"
 
+=begin
 bash 'install cert' do
   user 'root'
   code <<-EOH
@@ -55,6 +56,7 @@ bash 'install cert' do
   EOH
   not_if { ::File.directory?(ssl_path)}
 end
+=end
 
 template "/etc/nginx/sites-available/galaxy" do
   source "nginx_galaxy.erb"

@@ -581,7 +581,7 @@ def extra_steps(creds_config=None, node_name_short=None):
         "aws_access_key_id": creds_config.get("ses_iam", "aws_access_key_id"),
         "aws_secret_access_key": creds_config.get("ses_iam", "aws_secret_access_key")
     }
-    template = open( 'aws_creds.template' )
+    template = open( 'files/aws_creds.template' )
     src = Template( template.read() )
     updated_content = src.safe_substitute(config_info)
     file_path = "/home/galaxy/.globusgenomics/aws_creds"
