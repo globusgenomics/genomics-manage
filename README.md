@@ -9,6 +9,7 @@ Steps to launch an instance:
     - protect from accidental termination
     - increase root volume size to 15G, and choose gp2 type
     - select genomics-vpc-headnode-sg security group
+- Manually setup the letencrypt cert (that is install the certs on 16.04, and copy back)
 - Update the DNS with the instance's public ip
 - Get the manage package
     - ssh to the instance
@@ -20,8 +21,7 @@ Steps to launch an instance:
 - Update tool_conf.xml on galaxy repo if necessary; Check RDS if using RDS, that is make sure the database is available on RDS for this instance; Make sure the Globus Endpoint is not in use
 - Run main.py as root to configure the instance, e.g. python main.py --action launch --instance test1.globusgenomics.org
 - Setup globus creds at /home/galaxy/.globusgenomics
-- Manually setup the letencrypt cert
-- Create Globuse endpoint manually on a instance
+- Create Globus endpoint manually on a instance (chech the command history of the existing eps)
 - Optional: Add it to Nagios monitoring: ssh to nagios.ops.globusgenomics.org, edit /etc/nagios3/conf.d/hosts.cfg and add the following, then sudo service nagios3 reload
 ```
 define host {
