@@ -32,7 +32,7 @@ define service {
 }
 - service nagios3 reload
 
-if acl num close to limit, use code in clean_shared_endpoint_acl.py
+if acl num close to limit, use code in clean_shared_endpoint_acl.py, clean file /home/galaxy/.globusgenomics/shared_endpoint_shared_user_list
 
 [purge Galaxy datasets]
 #!/bin/sh

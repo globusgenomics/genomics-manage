@@ -74,3 +74,5 @@ config_info = {
 
 configure_file(template_file="manage_dynamic_pool.py", file_path="manage_dynamic_pool.py", config_info=config_info)
 
+configure_file(template_file="manage_dynamic_pool_ondemand.py", file_path="manage_dynamic_pool_ondemand.py", config_info=config_info)
+

@@ -29,8 +29,8 @@ tc = globus_sdk.TransferClient(authorizer=authorizer)
 acl_list = tc.endpoint_acl_list(endpoint_id)
 print acl_list
 for item in acl_list:
-    #if item['role_type'] != 'administrator':
-    #    tc.delete_endpoint_acl_rule(endpoint_id, item["id"])
+    if item['role_type'] != 'administrator':
+        tc.delete_endpoint_acl_rule(endpoint_id, item["id"])
     #if item["path"] == "/xiao2.243859313@eupathdb.org/":
     #    print item
         #print "deleting"
